@@ -9,9 +9,9 @@ public class Node {
     private String label;
 
     // Array of outgoing connector
-    private ArrayList<Connector> outConnector = new ArrayList<>();
+    private ArrayList<Edge> outEdge = new ArrayList<>();
     // Array of incoming connector
-    private ArrayList<Connector> inConnector = new ArrayList<>();
+    private ArrayList<Edge> inEdge = new ArrayList<>();
 
     private Map<String, Float> metadata = new HashMap<>();
 
@@ -31,11 +31,21 @@ public class Node {
         this.label = label;
     }
 
-    public ArrayList<Connector> getOutConnector() {
-        return outConnector;
+    public boolean addInEdge(Edge edge) {
+        inEdge.add(edge);
+        return true;
     }
 
-    public ArrayList<Connector> getInConnector() {
-        return inConnector;
+    public boolean addOutEdge(Edge edge) {
+        outEdge.add(edge);
+        return true;
+    }
+
+    public ArrayList<Edge> getOutEdge() {
+        return outEdge;
+    }
+
+    public ArrayList<Edge> getInEdge() {
+        return inEdge;
     }
 }

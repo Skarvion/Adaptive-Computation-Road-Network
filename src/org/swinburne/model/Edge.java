@@ -1,6 +1,6 @@
 package org.swinburne.model;
 
-public class Connector {
+public class Edge {
     // Road name
     private String name;
 
@@ -17,9 +17,13 @@ public class Connector {
     private Node source;
     private Node destination;
 
-    private int heuristic;
+    private float heuristic;
 
-    public Connector(float distance, float speedLimit, float traffic, Node source, Node destination) {
+    public Edge() {
+
+    }
+
+    public Edge(float distance, float speedLimit, float traffic, Node source, Node destination) {
         this.distance = distance;
         this.speedLimit = speedLimit;
         this.traffic = traffic;
@@ -65,6 +69,7 @@ public class Connector {
 
     public void setSource(Node source) {
         this.source = source;
+        source.addOutEdge(this);
     }
 
     public Node getDestination() {
@@ -73,13 +78,14 @@ public class Connector {
 
     public void setDestination(Node destination) {
         this.destination = destination;
+        destination.addInEdge(this);
     }
 
-    public int getHeuristic() {
+    public float getHeuristic() {
         return heuristic;
     }
 
-    public void setHeuristic(int heuristic) {
+    public void setHeuristic(float heuristic) {
         this.heuristic = heuristic;
     }
 }
