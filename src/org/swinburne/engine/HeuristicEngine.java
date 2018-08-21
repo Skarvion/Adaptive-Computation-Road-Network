@@ -1,41 +1,39 @@
 package org.swinburne.engine;
 
+import org.swinburne.engine.HeuristicSetting.HeuristicSetting;
+import org.swinburne.engine.HeuristicSetting.StraightLineDistance;
 import org.swinburne.model.Edge;
 import org.swinburne.model.Graph;
 import org.swinburne.model.Node;
 import org.swinburne.model.Tree.Tree;
 import org.swinburne.model.Tree.TreeNode;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.Map;
 
 public class HeuristicEngine {
+
+    private static ArrayList<HeuristicSetting> settingList = new ArrayList<>();
+
+    private static HeuristicSetting selectedHeuristic;
+
+    static {
+        settingList.add(new StraightLineDistance());
+
+        selectedHeuristic = settingList.get(0);
+    }
+
     public static void generateHeuristic(Graph graph, Node destination) {
-        Tree<Edge> edgeTree = new Tree<>(new TreeNode<>(new Edge()));
-        LinkedList<TreeNode<Edge>> frontier = new LinkedList<>();
-        for (Edge e : destination.getInEdge()) {
-            TreeNode<Edge> temp = new TreeNode<>(e);
-            edgeTree.getRoot().addChild(temp);
-            frontier.add(temp);
-        }
-
-        TreeNode<Edge> selectedEdge = null;
-        while((selectedEdge = frontier.poll()) != null) {
-            if (selectedEdge.getObject() == null) continue;
-
-            selectedEdge.getObject().setHeuristic(calculateHeuristic(selectedEdge));
-            ArrayList<TreeNode<Edge>> foundEdge = new ArrayList<>();
-            for (Edge e : selectedEdge.getObject().getSource().getInEdge()) {
-                TreeNode<Edge> edgeTreeNode = new TreeNode<>(e);
-                edgeTreeNode.setParent(selectedEdge);
-
-                frontier.push(edgeTreeNode);
-            }
+        for (Node n : graph.getNodeList()) {
+            if (n == destination) continue;
+            calculateHeuristic(graph, n, destination);
         }
     }
 
-    private static float calculateHeuristic(TreeNode<Edge> edgeNode) {
-        if (edgeNode.getParent() == null) return edgeNode.getObject().getDistance();
-        return edgeNode.getParent().getObject().getHeuristic() + edgeNode.getObject().getDistance();
+    private static double calculateHeuristic(Graph graph, Node node, Node destination) {
+        return selectedHeuristic.calculateHeuristic(graph, node, destination);
     }
 }

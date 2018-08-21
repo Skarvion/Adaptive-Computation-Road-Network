@@ -30,6 +30,7 @@ public class TreeNode<T> {
     }
 
     public void addChild(TreeNode<T> child) {
+        child.setParent(this);
         children.add(child);
     }
 

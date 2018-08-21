@@ -17,8 +17,6 @@ public class Edge {
     private Node source;
     private Node destination;
 
-    private float heuristic;
-
     public Edge() {
 
     }
@@ -79,13 +77,5 @@ public class Edge {
     public void setDestination(Node destination) {
         this.destination = destination;
         destination.addInEdge(this);
-    }
-
-    public float getHeuristic() {
-        return heuristic;
-    }
-
-    public void setHeuristic(float heuristic) {
-        this.heuristic = heuristic;
     }
 }

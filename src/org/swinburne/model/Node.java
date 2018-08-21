@@ -7,6 +7,9 @@ import java.util.Map;
 public class Node {
     private String id;
     private String label;
+    private double latitude;
+    private double longtitude;
+    private double heuristic;
 
     // Array of outgoing connector
     private ArrayList<Edge> outEdge = new ArrayList<>();
@@ -47,5 +50,29 @@ public class Node {
 
     public ArrayList<Edge> getInEdge() {
         return inEdge;
+    }
+
+    public double getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(double latitude) {
+        this.latitude = latitude;
+    }
+
+    public double getLongitude() {
+        return longtitude;
+    }
+
+    public void setLongtitude(double longtitude) {
+        this.longtitude = longtitude;
+    }
+
+    public double getHeuristic() {
+        return heuristic;
+    }
+
+    public void setHeuristic(double heuristic) {
+        this.heuristic = heuristic;
     }
 }

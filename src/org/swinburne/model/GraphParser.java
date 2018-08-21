@@ -22,6 +22,8 @@ public class GraphParser {
                 Node node = new Node();
                 node.setId(jsonObj.getString("id"));
                 node.setLabel(jsonObj.getString("label"));
+
+                result.addNode(node);
             }
 
             JSONArray edgeArray = graphJSON.getJSONArray("edge");
@@ -39,7 +41,6 @@ public class GraphParser {
                 edge.setDistance(jsonObj.getFloat("distance"));
                 edge.setSpeedLimit(jsonObj.getFloat("speed-limit"));
                 edge.setTraffic(jsonObj.getFloat("traffic"));
-                edge.setHeuristic(0);
             }
 
             return result;
@@ -107,8 +108,8 @@ public class GraphParser {
         jsonFile.put("edge", edgeArray);
 
         try {
-            BufferedWriter writer = new BufferedWriter(new FileWriter(filename, true));
-            System.out.println(jsonFile.toString());
+            BufferedWriter writer = new BufferedWriter(new FileWriter(filename, false));
+//            System.out.println(jsonFile.toString());
             writer.write(jsonFile.toString());
             writer.close();
         } catch (IOException e) {
