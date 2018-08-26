@@ -2,7 +2,8 @@ package org.swinburne.model;
 
 public class Edge {
     // Road name
-    private String name;
+    private String label;
+    private String id;
 
     // Distance measured in km
     private float distance;
@@ -29,12 +30,20 @@ public class Edge {
         this.destination = destination;
     }
 
-    public String getName() {
-        return name;
+    public String getLabel() {
+        return label;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setLabel(String label) {
+        this.label = label;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 
     public float getDistance() {

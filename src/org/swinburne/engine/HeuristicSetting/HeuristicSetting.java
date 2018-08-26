@@ -7,7 +7,7 @@ import java.util.ArrayList;
 
 public abstract class HeuristicSetting {
 
-    protected ArrayList<String> idList;
+    protected ArrayList<String> idList = new ArrayList<>();
 
     public boolean isID(String id) {
         for (String s : idList) if (s.equalsIgnoreCase(id)) return true;

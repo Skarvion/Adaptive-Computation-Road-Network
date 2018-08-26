@@ -14,20 +14,23 @@ public class AStarSearch {
     public ArrayList<Node> computeDirection(Graph graph, Node start, Node destination) {
         HeuristicEngine.generateHeuristic(graph, destination);
 
-        TreeNode<Node> rootNode = new TreeNode<>(null);
+        PriorityQueue<TreeNode<Node>> frontiers = new PriorityQueue<>(50, new HeuristicComparator());
+
+        TreeNode<Node> rootNode = new TreeNode<>(start);
         Tree<Node> tree = new Tree<>(rootNode);
-        PriorityQueue<Node> frontiers = new PriorityQueue<Node>(50, new HeuristicComparator());
+
+        frontiers.add(rootNode);
 
         TreeNode<Node> selectedNode;
-//        while ((selectedNode = frontiers.poll()) != null) {
-//            if (selectedNode == destination) return deriveSolution(selectedNode);
-//
-//            for (Edge e : selectedNode.getDestination().getOutEdge()) {
-//                TreeNode<Edge> nodes = new TreeNode<>(e);
-//                selectedNode.addChild(nodes);
-//                frontiers.add(nodes);
-//            }
-//        }
+        while ((selectedNode = frontiers.poll()) != null) {
+            if (selectedNode.getObject() == destination) return deriveSolution(selectedNode);
+
+            for (Edge e : selectedNode.getObject().getOutEdge()) {
+                TreeNode<Node> node = new TreeNode<>(e.getDestination());
+                selectedNode.addChild(node);
+                frontiers.add(node);
+            }
+        }
 
         return null;
     }

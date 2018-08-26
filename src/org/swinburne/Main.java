@@ -1,5 +1,10 @@
 package org.swinburne;
 
+import javafx.application.Application;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.stage.Stage;
 import org.swinburne.engine.AStarSearch;
 import org.swinburne.engine.HeuristicEngine;
 import org.swinburne.model.Edge;
@@ -9,59 +14,37 @@ import org.swinburne.model.Node;
 
 import java.util.ArrayList;
 
-public class Main {
+public class Main extends Application {
+
+    @Override
+    public void start(Stage primaryStage) throws Exception{
+        Parent root = FXMLLoader.load(getClass().getClassLoader().getResource("fxml/map.fxml"));
+        primaryStage.setTitle("Adaptive Map Navigation");
+        primaryStage.setScene(new Scene(root, 700, 500));
+        primaryStage.show();
+    }
+
     public static void main(String[] args) {
-//        Graph graph = new Graph();
 
-//        Node nodeA = new Node();
-//        nodeA.setId("A");
-//        nodeA.setLabel("Node A");
-//
-//        Node nodeB = new Node();
-//        nodeB.setId("B");
-//        nodeB.setLabel("Node B");
-//
-//        Node nodeC = new Node();
-//        nodeC.setId("C");
-//        nodeC.setLabel("Node C");
-//
-//        graph.addNode(nodeA);
-//        graph.addNode(nodeB);
-//        graph.addNode(nodeC);
-//
-//        Edge edgeA = new Edge();
-//        edgeA.setSource(nodeA);
-//        edgeA.setDestination(nodeB);
-//        edgeA.setName("Edge A");
-//        edgeA.setDistance(100);
-//
-//        Edge edgeB = new Edge();
-//        edgeB.setSource(nodeB);
-//        edgeB.setDestination(nodeC);
-//        edgeB.setName("Edge B");
-//        edgeB.setDistance(200);
-//
-//        ArrayList<Edge> edgeList = new ArrayList<>();vbc cbccb
-//        edgeList.add(edgeA);
-//        edgeList.add(edgeB);
+        launch(args);
 
-        Graph graph = GraphParser.generateGraph("Input2.json");
-        for (Node n : graph.getNodeList()) {
-            System.out.println("Found " + n.getId());
-        }
-
-        Node startingNode = graph.findNodeByID("A");
-        Node finishNode = graph.findNodeByID("G");
-        System.out.println("Starting from " + startingNode.getLabel());
-        System.out.println("Ending in " + finishNode.getLabel());
-
-        AStarSearch search = new AStarSearch();
-        ArrayList<Node> result = search.computeDirection(graph, startingNode, finishNode);
-        System.out.println("\nResult:");
-        for (Node n : result) {
-            System.out.println(n.getLabel());
-        }
-
-        GraphParser.saveGraph(graph, "Test.json");
+//        Graph graph = GraphParser.generateGraph("hawthorn.json");
+//        for (Node n : graph.getNodeList()) {
+//            System.out.println("Found " + n.getId());
+//        }
+//
+//        Node startingNode = graph.findNodeByID("A");
+//        Node finishNode = graph.findNodeByID("G");
+//        System.out.println("Starting from " + startingNode.getLabel());
+//        System.out.println("Ending in " + finishNode.getLabel());
+//
+//        AStarSearch search = new AStarSearch();
+//        ArrayList<Node> result = search.computeDirection(graph, startingNode, finishNode);
+//        System.out.println("\nResult:");
+//        for (Node n : result) {
+//            System.out.println(n.getLabel());
+//        }
+//
+//        GraphParser.saveGraph(graph, "Test.json");
     }
 }

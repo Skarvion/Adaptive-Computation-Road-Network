@@ -3,6 +3,7 @@ package org.swinburne.model;
 import jdk.nashorn.internal.parser.JSONParser;
 import org.apache.commons.io.FileUtils;
 import org.json.*;
+import org.swinburne.util.RandomStringGenerator;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -20,8 +21,14 @@ public class GraphParser {
             for (Object obj: nodeArray) {
                 JSONObject jsonObj = (JSONObject) obj;
                 Node node = new Node();
-                node.setId(jsonObj.getString("id"));
+                try {
+                    node.setId(jsonObj.getString("id"));
+                } catch (JSONException jsone) {
+                    node.setId(RandomStringGenerator.generateRandomString(10));
+                }
                 node.setLabel(jsonObj.getString("label"));
+                node.setLatitude(jsonObj.getDouble("latitude"));
+                node.setLongtitude(jsonObj.getDouble("longitude"));
 
                 result.addNode(node);
             }
@@ -37,7 +44,12 @@ public class GraphParser {
                 edge.setSource(source);
                 edge.setDestination(destination);
 
-                edge.setName(jsonObj.getString("name"));
+                try {
+                    edge.setId(jsonObj.getString("id"));
+                } catch (JSONException jsone) {
+                    edge.setId(RandomStringGenerator.generateRandomString(10));
+                }
+                edge.setLabel(jsonObj.getString("label"));
                 edge.setDistance(jsonObj.getFloat("distance"));
                 edge.setSpeedLimit(jsonObj.getFloat("speed-limit"));
                 edge.setTraffic(jsonObj.getFloat("traffic"));
@@ -77,7 +89,8 @@ public class GraphParser {
             for (Edge e : n.getInEdge()) {
                 if (!foundEdge.contains(e)) {
                     JSONObject edgeJSON = new JSONObject();
-                    edgeJSON.put("name", e.getName());
+                    edgeJSON.put("id", e.getId());
+                    edgeJSON.put("label", e.getLabel());
                     edgeJSON.put("distance", e.getDistance());
                     edgeJSON.put("speed-limit", e.getSpeedLimit());
                     edgeJSON.put("traffic", e.getTraffic());
@@ -92,7 +105,8 @@ public class GraphParser {
             for (Edge e : n.getOutEdge()) {
                 if (!foundEdge.contains(e)) {
                     JSONObject edgeJSON = new JSONObject();
-                    edgeJSON.put("name", e.getName());
+                    edgeJSON.put("id", e.getId());
+                    edgeJSON.put("label", e.getLabel());
                     edgeJSON.put("distance", e.getDistance());
                     edgeJSON.put("speed-limit", e.getSpeedLimit());
                     edgeJSON.put("traffic", e.getTraffic());

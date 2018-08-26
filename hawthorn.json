@@ -1,0 +1,40 @@
+{
+  "node": [
+    {
+      "id": "Glenferrie/Burwood",
+      "label": "Glenferrie/Burwood Intersection",
+      "latitude": -37.822611,
+      "longitude": 145.035348
+    },
+    {
+      "id": "Glenferrie/Wakefield",
+      "label": "Glenferrie/Wakefield Intersection",
+      "latitude": -37.820465,
+      "longitude": 145.035752
+    },
+    {
+      "id": "Glenferrie/Park",
+      "label": "Glenferrie/Park Intersection",
+      "latitude": -37.819746,
+      "longitude": 145.035889
+    }
+  ],
+  "edge": [
+    {
+      "distance": 240.26,
+      "speed-limit": 0,
+      "label": "Glenferrie Road",
+      "destination": "Glenferrie/Wakefield",
+      "source": "Glenferrie/Burwood",
+      "traffic": 0
+    },
+    {
+      "distance": 80.29,
+      "speed-limit": 0,
+      "label": "Glenferrie Road",
+      "destination": "Glenferrie/Park",
+      "source": "Glenferrie/Wakefield",
+      "traffic": 0
+    }
+  ]
+}
