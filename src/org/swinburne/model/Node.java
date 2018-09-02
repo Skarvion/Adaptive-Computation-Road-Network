@@ -11,6 +11,9 @@ public class Node {
     private double longtitude;
     private double heuristic;
 
+    //@TODO: decide whether leave it here or separate it to another class
+    private double cost;
+
     // Array of outgoing connector
     private ArrayList<Edge> outEdge = new ArrayList<>();
     // Array of incoming connector
@@ -74,5 +77,13 @@ public class Node {
 
     public void setHeuristic(double heuristic) {
         this.heuristic = heuristic;
+    }
+
+    public double getCost() {
+        return cost;
+    }
+
+    public void setCost(double cost) {
+        this.cost = cost;
     }
 }

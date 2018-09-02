@@ -18,6 +18,8 @@ public class StraightLineDistance extends HeuristicSetting {
 //    Reference: http://www.movable-type.co.uk/scripts/latlong.html
 //    Reference: https://bigdatanerd.wordpress.com/2011/11/03/java-implementation-of-haversine-formula-for-distance-calculation-between-two-points/
 //    Using haversine calculation
+
+    //@TODO: fix the heuristic here, it's so great that distance cost does not affect this in any significant way
     @Override
     public double calculateHeuristic(Graph graph, Node node, Node destination) {
         double dLat = toRadian(destination.getLatitude() - node.getLatitude());

@@ -14,7 +14,7 @@ public class AStarSearch {
     public ArrayList<Node> computeDirection(Graph graph, Node start, Node destination) {
         HeuristicEngine.generateHeuristic(graph, destination);
 
-        PriorityQueue<TreeNode<Node>> frontiers = new PriorityQueue<>(50, new HeuristicComparator());
+        PriorityQueue<TreeNode<Node>> frontiers = new PriorityQueue<>(50, new CostComparator());
 
         TreeNode<Node> rootNode = new TreeNode<>(start);
         Tree<Node> tree = new Tree<>(rootNode);
@@ -26,13 +26,23 @@ public class AStarSearch {
             if (selectedNode.getObject() == destination) return deriveSolution(selectedNode);
 
             for (Edge e : selectedNode.getObject().getOutEdge()) {
-                TreeNode<Node> node = new TreeNode<>(e.getDestination());
-                selectedNode.addChild(node);
-                frontiers.add(node);
+                Node newLocationNode = e.getDestination();
+                newLocationNode.setCost(calculateTravelCost(newLocationNode, e));
+                TreeNode<Node> treeNode = new TreeNode<>(newLocationNode);
+                selectedNode.addChild(treeNode);
+                frontiers.add(treeNode);
             }
         }
 
         return null;
+    }
+
+    private double calculateTravelCost(Node node, Edge edge) {
+        double speedLimit = edge.getSpeedLimit();
+        // If speed limit is not defined, assume running at 40km/h
+        if (speedLimit == 0) speedLimit = 40;
+
+        return edge.getDistance() + node.getHeuristic();
     }
 
     private ArrayList<Node> deriveSolution(TreeNode<Node> endNode) {

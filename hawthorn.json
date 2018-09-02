@@ -17,6 +17,18 @@
       "label": "Glenferrie/Park Intersection",
       "latitude": -37.819746,
       "longitude": 145.035889
+    },
+    {
+      "id": "Burwood/Auburn",
+      "label": "Burwood/Aubrun Intersection",
+      "latitude": -37.823766,
+      "longitude": 145.044751
+    },
+    {
+      "id": "Auburn/Lidiard",
+      "label": "Auburn/Lidiard Intersection",
+      "latitude": -37.819846,
+      "longitude": 145.045545
     }
   ],
   "edge": [
@@ -29,11 +41,35 @@
       "traffic": 0
     },
     {
-      "distance": 80.29,
+      "distance": 10000,
       "speed-limit": 0,
       "label": "Glenferrie Road",
       "destination": "Glenferrie/Park",
       "source": "Glenferrie/Wakefield",
+      "traffic": 0
+    },
+    {
+      "distance": 40,
+      "speed-limit": 0,
+      "label": "Burwood Road",
+      "destination": "Glenferrie/Burwood",
+      "source": "Burwood/Auburn",
+      "traffic": 0
+    },
+    {
+      "distance": 10,
+      "speed-limit": 0,
+      "label": "Auburn Road",
+      "destination": "Auburn/Lidiard",
+      "source": "Burwood/Auburn",
+      "traffic": 0
+    },
+    {
+      "distance": 10,
+      "speed-limit": 0,
+      "label": "Lidiard Street",
+      "destination": "Glenferrie/Park",
+      "source": "Auburn/Lidiard",
       "traffic": 0
     }
   ]
