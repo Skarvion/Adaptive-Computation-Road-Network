@@ -53,6 +53,14 @@ public class GraphParser {
                 edge.setDistance(jsonObj.getFloat("distance"));
                 edge.setSpeedLimit(jsonObj.getFloat("speed-limit"));
                 edge.setTraffic(jsonObj.getFloat("traffic"));
+
+                if (jsonObj.getBoolean("two-way")) {
+                    // Use copy method, doesn't copy the id, source and destination. Will review
+                    Edge secondEdge = new Edge(edge);
+                    secondEdge.setId(RandomStringGenerator.generateRandomString(10));
+                    secondEdge.setDestination(source);
+                    secondEdge.setSource(destination);
+                }
             }
 
             return result;

@@ -1,11 +1,13 @@
 package org.swinburne.model.Tree;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 // Consider again the efficiency of making another class for heuristic calculation
 public class TreeNode<T> {
     private T object;
     private TreeNode<T> parent;
+    private HashMap<String, Double> metaData = new HashMap<>();
     private ArrayList<TreeNode<T>> children = new ArrayList<>();
 
     public TreeNode(T object) {
@@ -57,4 +59,8 @@ public class TreeNode<T> {
     public void setChildren(ArrayList<TreeNode<T>> children) {
         this.children = children;
     }
+
+    public void putMetaData(String name, double value) { metaData.put(name, value); }
+
+    public double getMetaData(String name) { return metaData.get(name); }
 }

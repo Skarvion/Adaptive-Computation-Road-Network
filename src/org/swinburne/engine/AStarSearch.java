@@ -10,6 +10,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.PriorityQueue;
 
+
+// @Note: at the moment this class is used for
 public class AStarSearch {
     public ArrayList<Node> computeDirection(Graph graph, Node start, Node destination) {
         HeuristicEngine.generateHeuristic(graph, destination);
@@ -27,8 +29,11 @@ public class AStarSearch {
 
             for (Edge e : selectedNode.getObject().getOutEdge()) {
                 Node newLocationNode = e.getDestination();
-                newLocationNode.setCost(calculateTravelCost(newLocationNode, e));
+//                newLocationNode.setCost(calculateTravelCost(newLocationNode, e));
                 TreeNode<Node> treeNode = new TreeNode<>(newLocationNode);
+
+                // Putting the speed cost in the TreeNode now rather than the graph Node
+                treeNode.putMetaData("time", calculateTravelTime(e, selectedNode.getMetaData("time")));
                 selectedNode.addChild(treeNode);
                 frontiers.add(treeNode);
             }
@@ -37,11 +42,16 @@ public class AStarSearch {
         return null;
     }
 
-    private double calculateTravelCost(Node node, Edge edge) {
+    private double calculateTravelTime(Edge edge, double totalTime) {
         double speedLimit = edge.getSpeedLimit();
         // If speed limit is not defined, assume running at 40km/h
         if (speedLimit == 0) speedLimit = 40;
 
+        double time = edge.getDistance() / speedLimit;
+    }
+
+    // For now not being used, @TODO maybe look over here again later
+    private double calculateTravelCost(Node node, Edge edge) {
         return edge.getDistance() + node.getHeuristic();
     }
 

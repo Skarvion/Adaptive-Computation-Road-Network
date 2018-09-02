@@ -32,6 +32,8 @@ public class StraightLineDistance extends HeuristicSetting {
         double d = EARTH_RADIUS_METRE * c;
 
         node.setHeuristic(d);
+        System.out.println(node.getLabel() + " latitude: " + node.getLatitude() + ", longitude: " + node.getLongitude());
+        System.out.println(node.getLabel() + " heuristic: " + d);
 
         return d;
     }

@@ -25,52 +25,72 @@
       "longitude": 145.044751
     },
     {
-      "id": "Auburn/Lidiard",
-      "label": "Auburn/Lidiard Intersection",
+      "id": "Glenferrie/Liddiard",
+      "label": "Glenferrie/Liddiard Intersection",
+      "latitude": -37.818825,
+      "longitude": 145.036060
+    },
+    {
+      "id": "Auburn/Liddiard",
+      "label": "Auburn/Liddiard Intersection",
       "latitude": -37.819846,
       "longitude": 145.045545
     }
   ],
   "edge": [
     {
-      "distance": 240.26,
+      "distance": 240,
       "speed-limit": 0,
       "label": "Glenferrie Road",
       "destination": "Glenferrie/Wakefield",
       "source": "Glenferrie/Burwood",
-      "traffic": 0
+      "traffic": 0,
+      "two-way": true
     },
     {
-      "distance": 10000,
+      "distance": 80,
       "speed-limit": 0,
       "label": "Glenferrie Road",
       "destination": "Glenferrie/Park",
       "source": "Glenferrie/Wakefield",
-      "traffic": 0
+      "traffic": 0,
+      "two-way": true
     },
     {
-      "distance": 40,
+      "distance": 840,
       "speed-limit": 0,
       "label": "Burwood Road",
       "destination": "Glenferrie/Burwood",
       "source": "Burwood/Auburn",
-      "traffic": 0
+      "traffic": 0,
+      "two-way": true
     },
     {
-      "distance": 10,
+      "distance": 435,
       "speed-limit": 0,
       "label": "Auburn Road",
-      "destination": "Auburn/Lidiard",
+      "destination": "Auburn/Liddiard",
       "source": "Burwood/Auburn",
-      "traffic": 0
+      "traffic": 0,
+      "two-way": true
     },
     {
-      "distance": 10,
+      "distance": 105,
       "speed-limit": 0,
-      "label": "Lidiard Street",
+      "label": "Glenferrie Road",
       "destination": "Glenferrie/Park",
-      "source": "Auburn/Lidiard",
-      "traffic": 0
+      "source": "Glenferrie/Liddiard",
+      "traffic": 0,
+      "two-way": true
+    },
+    {
+      "distance": 840,
+      "speed-limit": 0,
+      "label": "Liddiard Street",
+      "destination": "Auburn/Liddiard",
+      "source": "Glenferrie/Liddiard",
+      "traffic": 0,
+      "two-way": true
     }
   ]
 }

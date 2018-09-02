@@ -30,6 +30,13 @@ public class Edge {
         this.destination = destination;
     }
 
+    public Edge(Edge edge) {
+        this.label = edge.label;
+        this.distance = edge.distance;
+        this.speedLimit = edge.speedLimit;
+        this.traffic = edge.traffic;
+    }
+
     public String getLabel() {
         return label;
     }
