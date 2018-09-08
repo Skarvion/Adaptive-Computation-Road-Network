@@ -1,6 +1,5 @@
 package org.swinburne.engine;
 
-import org.swinburne.model.Edge;
 import org.swinburne.model.Node;
 import org.swinburne.model.Tree.TreeNode;
 

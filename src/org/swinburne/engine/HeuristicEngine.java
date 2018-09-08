@@ -2,17 +2,10 @@ package org.swinburne.engine;
 
 import org.swinburne.engine.HeuristicSetting.HeuristicSetting;
 import org.swinburne.engine.HeuristicSetting.StraightLineDistance;
-import org.swinburne.model.Edge;
 import org.swinburne.model.Graph;
 import org.swinburne.model.Node;
-import org.swinburne.model.Tree.Tree;
-import org.swinburne.model.Tree.TreeNode;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Map;
 
 public class HeuristicEngine {
 

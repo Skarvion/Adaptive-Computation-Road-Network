@@ -1,6 +1,5 @@
 package org.swinburne.model;
 
-import jdk.nashorn.internal.parser.JSONParser;
 import org.apache.commons.io.FileUtils;
 import org.json.*;
 import org.swinburne.util.RandomStringGenerator;
@@ -9,6 +8,7 @@ import java.io.*;
 import java.util.ArrayList;
 
 public class GraphParser {
+    // Due to moving to OSM, this might be deprecateed
     public static Graph generateGraph(String filename) {
         try {
             File inputFile = new File(filename);
@@ -36,30 +36,30 @@ public class GraphParser {
             JSONArray edgeArray = graphJSON.getJSONArray("edge");
             for (Object obj : edgeArray) {
                 JSONObject jsonObj = (JSONObject) obj;
-                Edge edge = new Edge();
+                Way way = new Way();
 
                 Node source = result.findNodeByID(jsonObj.getString("source"));
                 Node destination = result.findNodeByID(jsonObj.getString("destination"));
 
-                edge.setSource(source);
-                edge.setDestination(destination);
+                way.addNode(source);
+                way.addNode(destination);
 
                 try {
-                    edge.setId(jsonObj.getString("id"));
+                    way.setId(jsonObj.getString("id"));
                 } catch (JSONException jsone) {
-                    edge.setId(RandomStringGenerator.generateRandomString(10));
+                    way.setId(RandomStringGenerator.generateRandomString(10));
                 }
-                edge.setLabel(jsonObj.getString("label"));
-                edge.setDistance(jsonObj.getFloat("distance"));
-                edge.setSpeedLimit(jsonObj.getFloat("speed-limit"));
-                edge.setTraffic(jsonObj.getFloat("traffic"));
+                way.setLabel(jsonObj.getString("label"));
+                way.setDistance(jsonObj.getFloat("distance"));
+                way.setSpeedLimit(jsonObj.getFloat("speed-limit"));
+                way.setTraffic(jsonObj.getFloat("traffic"));
 
                 if (jsonObj.getBoolean("two-way")) {
                     // Use copy method, doesn't copy the id, source and destination. Will review
-                    Edge secondEdge = new Edge(edge);
-                    secondEdge.setId(RandomStringGenerator.generateRandomString(10));
-                    secondEdge.setDestination(source);
-                    secondEdge.setSource(destination);
+                    Way secondWay = new Way(way);
+                    secondWay.setId(RandomStringGenerator.generateRandomString(10));
+                    secondWay.addNode(source);
+                    secondWay.addNode(destination);
                 }
             }
 
@@ -88,43 +88,26 @@ public class GraphParser {
 
         jsonFile.put("node", nodeArray);
 
-        ArrayList<Edge> foundEdge = new ArrayList<>();
+        ArrayList<Way> foundWay = new ArrayList<>();
         // Questioning the optimization on this
         JSONArray edgeArray = new JSONArray();
         for (Node n : graph.getNodeList()) {
 
-            // Can we make this shorter later?
-            for (Edge e : n.getInEdge()) {
-                if (!foundEdge.contains(e)) {
-                    JSONObject edgeJSON = new JSONObject();
-                    edgeJSON.put("id", e.getId());
-                    edgeJSON.put("label", e.getLabel());
-                    edgeJSON.put("distance", e.getDistance());
-                    edgeJSON.put("speed-limit", e.getSpeedLimit());
-                    edgeJSON.put("traffic", e.getTraffic());
-                    edgeJSON.put("source", e.getSource().getId());
-                    edgeJSON.put("destination", e.getDestination().getId());
-
-                    foundEdge.add(e);
-                    edgeArray.put(edgeJSON);
-                }
-            }
-
-            for (Edge e : n.getOutEdge()) {
-                if (!foundEdge.contains(e)) {
-                    JSONObject edgeJSON = new JSONObject();
-                    edgeJSON.put("id", e.getId());
-                    edgeJSON.put("label", e.getLabel());
-                    edgeJSON.put("distance", e.getDistance());
-                    edgeJSON.put("speed-limit", e.getSpeedLimit());
-                    edgeJSON.put("traffic", e.getTraffic());
-                    edgeJSON.put("source", e.getSource().getId());
-                    edgeJSON.put("destination", e.getDestination().getId());
-
-                    foundEdge.add(e);
-                    edgeArray.put(edgeJSON);
-                }
-            }
+//            for (Way e : n.getOutEdge()) {
+//                if (!foundWay.contains(e)) {
+//                    JSONObject edgeJSON = new JSONObject();
+//                    edgeJSON.put("id", e.getId());
+//                    edgeJSON.put("label", e.getLabel());
+//                    edgeJSON.put("distance", e.getDistance());
+//                    edgeJSON.put("speed-limit", e.getSpeedLimit());
+//                    edgeJSON.put("traffic", e.getTraffic());
+//                    edgeJSON.put("source", e.getSource().getId());
+//                    edgeJSON.put("destination", e.getDestination().getId());
+//
+//                    foundWay.add(e);
+//                    edgeArray.put(edgeJSON);
+//                }
+//            }
         }
 
         jsonFile.put("edge", edgeArray);

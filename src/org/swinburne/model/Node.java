@@ -14,10 +14,7 @@ public class Node {
     //@TODO: decide whether leave it here or separate it to another class
     private double cost;
 
-    // Array of outgoing connector
-    private ArrayList<Edge> outEdge = new ArrayList<>();
-    // Array of incoming connector
-    private ArrayList<Edge> inEdge = new ArrayList<>();
+    private ArrayList<Way> wayArrayList = new ArrayList<>();
 
     private Map<String, Float> metadata = new HashMap<>();
 
@@ -37,23 +34,9 @@ public class Node {
         this.label = label;
     }
 
-    public boolean addInEdge(Edge edge) {
-        inEdge.add(edge);
-        return true;
-    }
+    public boolean addWay(Way way) { return wayArrayList.add(way); }
 
-    public boolean addOutEdge(Edge edge) {
-        outEdge.add(edge);
-        return true;
-    }
-
-    public ArrayList<Edge> getOutEdge() {
-        return outEdge;
-    }
-
-    public ArrayList<Edge> getInEdge() {
-        return inEdge;
-    }
+    public ArrayList<Way> getWayArrayList() { return wayArrayList; }
 
     public double getLatitude() {
         return latitude;

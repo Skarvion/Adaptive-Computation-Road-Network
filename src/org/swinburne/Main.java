@@ -5,14 +5,10 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
-import org.swinburne.engine.AStarSearch;
-import org.swinburne.engine.HeuristicEngine;
-import org.swinburne.model.Edge;
+import org.swinburne.engine.Parser.OSMParser;
 import org.swinburne.model.Graph;
-import org.swinburne.model.GraphParser;
-import org.swinburne.model.Node;
 
-import java.util.ArrayList;
+import java.io.File;
 
 public class Main extends Application {
 
@@ -27,6 +23,9 @@ public class Main extends Application {
     public static void main(String[] args) {
 
         launch(args);
+
+//        Graph graph = OSMParser.parseFromOSM(new File("Hawthorn.osm"));
+
 
 //        Graph graph = GraphParser.generateGraph("hawthorn.json");
 //        for (Node n : graph.getNodeList()) {

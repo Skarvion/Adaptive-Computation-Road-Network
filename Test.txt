@@ -1,1 +1,1 @@
-{"node":[{"id":"A","label":"Node A"},{"id":"B","label":"Node B"},{"id":"C","label":"Node C"}],"edge":[{"distance":100,"speed-limit":0,"name":"Edge A","destination":"B","source":"A","traffic":0},{"distance":200,"speed-limit":0,"name":"Edge B","destination":"C","source":"B","traffic":0}]}
+{"node":[{"id":"A","label":"Node A"},{"id":"B","label":"Node B"},{"id":"C","label":"Node C"}],"way":[{"distance":100,"speed-limit":0,"name":"Edge A","destination":"B","source":"A","traffic":0},{"distance":200,"speed-limit":0,"name":"Edge B","destination":"C","source":"B","traffic":0}]}
