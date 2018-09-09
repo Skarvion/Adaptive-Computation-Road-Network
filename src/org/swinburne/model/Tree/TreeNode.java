@@ -10,6 +10,10 @@ public class TreeNode<T> {
     private HashMap<String, Double> metaData = new HashMap<>();
     private ArrayList<TreeNode<T>> children = new ArrayList<>();
 
+    // May get removed later
+    private double cost;
+    private double time; // in second
+
     public TreeNode(T object) {
         this.object = object;
     }
@@ -63,4 +67,20 @@ public class TreeNode<T> {
     public void putMetaData(String name, double value) { metaData.put(name, value); }
 
     public double getMetaData(String name) { return metaData.get(name); }
+
+    public double getCost() {
+        return cost;
+    }
+
+    public void setCost(double cost) {
+        this.cost = cost;
+    }
+
+    public double getTime() {
+        return time;
+    }
+
+    public void setTime(double time) {
+        this.time = time;
+    }
 }
