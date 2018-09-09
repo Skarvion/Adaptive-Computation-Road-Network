@@ -114,7 +114,6 @@ public class GraphParser {
 
         try {
             BufferedWriter writer = new BufferedWriter(new FileWriter(filename, false));
-//            System.out.println(jsonFile.toString());
             writer.write(jsonFile.toString());
             writer.close();
         } catch (IOException e) {

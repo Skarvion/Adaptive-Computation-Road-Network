@@ -50,7 +50,7 @@ public class OSMParser {
                     way.setId(element.getAttribute("id"));
 
                     NodeList wayNodeList = element.getElementsByTagName("nd");
-                    System.out.println("Way : " + way.getId());
+//                    System.out.println("Way : " + way.getId());
                     for (int j = 0; j < wayNodeList.getLength(); j++) {
                         org.w3c.dom.Node selectedNodeInWay = wayNodeList.item(j);
 
@@ -59,13 +59,13 @@ public class OSMParser {
                             Node foundNode = graph.findNodeByID(nodeElement.getAttribute("ref"));
                             if (foundNode != null) {
                                 way.addNode(foundNode);
-                                System.out.println("Attaching " + foundNode.getId());
+//                                System.out.println("Attaching " + foundNode.getId());
                             }
                         }
                     }
 
                     graph.addWay(way);
-                    System.out.println("----------------");
+//                    System.out.println("----------------");
 
                 }
             }

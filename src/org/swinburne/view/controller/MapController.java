@@ -7,6 +7,7 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
@@ -47,9 +48,9 @@ public class MapController implements Initializable {
     private final double PANE_OFFSET = 2;
 
     // Work around to a weird bug where the node will "go" to the combo box if selected, thus now wrap it in around simple object proeperty
-    private ObservableList<SimpleObjectProperty<MapNode>> mapNodeObservableList = FXCollections.observableArrayList();
+    private ObservableList<MapNode> mapNodeObservableList = FXCollections.observableArrayList();
 
-    private ObservableList<SimpleObjectProperty<MapEdge>> mapEdgeObservableList = FXCollections.observableArrayList();
+    private ObservableList<MapEdge> mapEdgeObservableList = FXCollections.observableArrayList();
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -57,18 +58,24 @@ public class MapController implements Initializable {
         // @TODO: move the graph generation to outside the controller
         graph = OSMParser.parseFromOSM(new File("Swinburne.osm"));
 
-        sourceNodeComboBox.setItems(mapNodeObservableList);
-        sourceNodeComboBox.setCellFactory(param -> new MapNodeListCell());
-        sourceNodeComboBox.setConverter(new StringConverter());
-
-        destinationNodeComboBox.setItems(mapNodeObservableList);
-        destinationNodeComboBox.setCellFactory(param -> new MapNodeListCell());
-        destinationNodeComboBox.setConverter(new StringConverter());
+//        sourceNodeComboBox.setItems(mapNodeObservableList);
+//        sourceNodeComboBox.setCellFactory(param -> new MapNodeListCell());
+//        sourceNodeComboBox.setConverter(new StringConverter());
+//
+//        destinationNodeComboBox.setItems(mapNodeObservableList);
+//        destinationNodeComboBox.setCellFactory(param -> new MapNodeListCell());
+//        destinationNodeComboBox.setConverter(new StringConverter());
     }
 
     @FXML
     private void reload(ActionEvent event) {
         drawGraph();
+    }
+
+    @FXML
+    void mapClick(MouseEvent event) {
+        System.out.println("Click!");
+        closestNodeClick(event);
     }
 
     @FXML
@@ -150,7 +157,7 @@ public class MapController implements Initializable {
 
             MapNode temp = new MapNode(n, convertedX, convertedY);
             drawPane.getChildren().add(temp);
-            mapNodeObservableList.add(new SimpleObjectProperty<MapNode>(temp));
+            mapNodeObservableList.add(temp);
         }
 
         // Draw lines between nodes
@@ -172,13 +179,33 @@ public class MapController implements Initializable {
 //            }
 //        }
 
-        for (Way w : graph.getWayList()) {
-            MapEdge mapEdge = new MapEdge(w);
-            drawPane.getChildren().add(mapEdge);
-            mapEdgeObservableList.add(new SimpleObjectProperty<MapEdge>(mapEdge));
+//        for (Way w : graph.getWayList()) {
+//            MapEdge mapEdge = new MapEdge(w);
+//            drawPane.getChildren().add(mapEdge);
+//            mapEdgeObservableList.add(mapEdge);
+//        }
+    }
+
+    private MapNode closestNodeClick(MouseEvent event) {
+        MapNode closestNode = null;
+
+        double closeX = drawPane.getWidth() + 10;
+        double closeY = drawPane.getHeight() + 10;
+
+        double distance = Math.sqrt(Math.pow(closeX, 2) + Math.pow(closeY, 2));
+
+        for (MapNode mn : mapNodeObservableList) {
+            double temp = Math.sqrt(Math.pow(mn.getPosX() - event.getX(), 2) + Math.pow(mn.getPosY() - event.getY(), 2));
+            if (temp < distance) {
+                distance = temp;
+                closestNode = mn;
+            }
         }
 
-
+        if (closestNode != null) {
+            System.out.println("Closest node is " + closestNode.getNode().getId() + "\nX: " + closestNode.getPosX() + "\nY: " + closestNode.getPosY());
+        }
+        return closestNode;
     }
 
     public Graph getGraph() {
@@ -209,10 +236,10 @@ public class MapController implements Initializable {
             setLayoutX(x);
             setLayoutY(y);
 
-            System.out.println("Node: " + node.getId());
-            System.out.println("PosX: " + getPosX());
-            System.out.println("PosY: " + getPosY());
-            System.out.println("-------------");
+//            System.out.println("Node: " + node.getId());
+//            System.out.println("PosX: " + getPosX());
+//            System.out.println("PosY: " + getPosY());
+//            System.out.println("-------------");
 
             this.node = node;
         }
@@ -251,50 +278,34 @@ public class MapController implements Initializable {
         public MapEdge(Way way) {
             this.way = way;
 
-//            AnchorPane.setTopAnchor(this, 0.0);
-//            AnchorPane.setLeftAnchor(this, 0.0);
-//            AnchorPane.setRightAnchor(this, 0.0);
-//            AnchorPane.setBottomAnchor(this, 0.0);
-
             if (way.getNodeOrderedList().size() <= 1) return;
 
             MapNode origin = getMapNode(way.getNodeOrderedList().get(0));
             if (origin == null) return;
-            setLayoutX(origin.getPosX());
-            setLayoutY(origin.getPosY());
 
-            double lastX = 0;
-            double lastY = 0;
+            double topMost = getMapNode(way.getNodeOrderedList().get(0)).getPosY();
+            double leftMost = getMapNode(way.getNodeOrderedList().get(0)).getPosX();
 
-            for (int i = 1; i < way.getNodeOrderedList().size(); i++) {
-                MapNode start = getMapNode(way.getNodeOrderedList().get(i - 1));
-                MapNode end = getMapNode(way.getNodeOrderedList().get(i));
-
-                if (start == null || end == null) continue;
+            for (int i = 1; i < 2; i++) {
+                try {
+                    MapNode start = getMapNode(way.getNodeOrderedList().get(i));
+                } catch (IndexOutOfBoundsException ioobe) {
+                    break;
+                }
 
                 Line line = new Line();
 
-                double tempX = start.getPosX();
-                double tempY = start.getPosY();
-                double endX = end.getPosX();
-                double endY = end.getPosY();
+                line.setStartX(getMapNode(way.getNodeOrderedList().get(i - 1)).getPosX());
+                line.setStartY(getMapNode(way.getNodeOrderedList().get(i - 1)).getPosY());
 
-                double relX = endX - tempX;
-                double relY = endY - tempY;
+                double newX = getMapNode(way.getNodeOrderedList().get(i)).getPosX();
+                double newY = getMapNode(way.getNodeOrderedList().get(i)).getPosY();
 
-                line.setStartX(lastX);
-                line.setStartY(lastY);
-                line.setEndX(lastX + relX);
-                line.setEndY(lastY + relY);
+                if (newX < leftMost) leftMost = newX;
+                if (newY < topMost) topMost = newY;
 
-                lastX = lastX + relX;
-                lastY = lastY + relY;
-
-//                System.out.println("Start X " + line.getStartX());
-//                System.out.println("Start Y " + line.getStartY());
-//                System.out.println("End X " + line.getEndX());
-//                System.out.println("End Y " + line.getEndY());
-//                System.out.println("====================");
+                line.setEndX(newX);
+                line.setEndY(newY);
 
                 line.setStroke(Color.BLUE);
                 line.setStrokeWidth(STROKE_WIDTH);
@@ -302,12 +313,15 @@ public class MapController implements Initializable {
                 getChildren().add(line);
                 lineArrayList.add(line);
             }
+
+            setLayoutX(leftMost);
+            setLayoutY(topMost);
         }
 
         private MapNode getMapNode(Node node) {
-            for (SimpleObjectProperty<MapNode> mapNode : mapNodeObservableList) {
-                if (mapNode.get().getNode() == node) {
-                    return mapNode.get();
+            for (MapNode mn : mapNodeObservableList) {
+                if (mn.getNode() == node) {
+                    return mn;
                 }
             }
             throw new NullPointerException();
@@ -333,9 +347,5 @@ public class MapController implements Initializable {
         public SimpleObjectProperty<MapNode> fromString(String string) {
             return null;
         }
-
-
     }
-
-
 }
