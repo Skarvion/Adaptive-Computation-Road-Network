@@ -3,6 +3,7 @@
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.RadioButton?>
 <?import javafx.scene.control.TextArea?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.ColumnConstraints?>
@@ -12,7 +13,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<HBox xmlns="http://javafx.com/javafx/10.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.swinburne.view.controller.MapController">
+<HBox xmlns="http://javafx.com/javafx/9.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.swinburne.view.controller.MapController">
    <children>
       <AnchorPane fx:id="drawPane" minHeight="500.0" minWidth="500.0" onMouseClicked="#mapClick" prefHeight="600.0" prefWidth="600.0" style="-fx-background-color: white;">
 
@@ -20,6 +21,13 @@
       <VBox maxWidth="1.7976931348623157E308">
          <children>
             <Button fx:id="reloadButton" mnemonicParsing="false" onAction="#reload" text="Reload" />
+            <VBox prefWidth="100.0" spacing="10.0">
+               <children>
+                  <RadioButton fx:id="noneRadioButton" mnemonicParsing="false" selected="true" text="None" />
+                  <RadioButton fx:id="startRadioButton" mnemonicParsing="false" text="Start" />
+                  <RadioButton fx:id="finishRadioButton" mnemonicParsing="false" text="Finish" />
+               </children>
+            </VBox>
             <GridPane>
               <columnConstraints>
                 <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />

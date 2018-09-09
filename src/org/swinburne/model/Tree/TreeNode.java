@@ -10,9 +10,10 @@ public class TreeNode<T> {
     private HashMap<String, Double> metaData = new HashMap<>();
     private ArrayList<TreeNode<T>> children = new ArrayList<>();
 
-    // May get removed later
-    private double cost;
+    private double cost; // in term of distance (for now)
+    private double heuristic;
     private double time; // in second
+    private double distance; // total distance traversed
 
     public TreeNode(T object) {
         this.object = object;
@@ -76,11 +77,27 @@ public class TreeNode<T> {
         this.cost = cost;
     }
 
+    public double getHeuristic() {
+        return heuristic;
+    }
+
+    public void setHeuristic(double heuristic) {
+        this.heuristic = heuristic;
+    }
+
     public double getTime() {
         return time;
     }
 
     public void setTime(double time) {
         this.time = time;
+    }
+
+    public double getDistance() {
+        return distance;
+    }
+
+    public void setDistance(double distance) {
+        this.distance = distance;
     }
 }

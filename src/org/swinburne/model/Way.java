@@ -12,7 +12,7 @@ public class Way {
     // Distance measured in km
     private float distance;
     // Speed measured in km/h
-    private float speedLimit;
+    private float speedLimit = 40; // speed limit is 40 km/h by default
     // Traffic coefficient limit 0.01 to 1
     private float traffic;
     private boolean twoWay;
@@ -115,11 +115,11 @@ public class Way {
         this.distance = distance;
     }
 
-    public float getSpeedLimit() {
+    public float getSpeedLimitKmh() {
         return speedLimit;
     }
 
-    public void setSpeedLimit(float speedLimit) {
+    public void setSpeedLimitKmh(float speedLimit) {
         this.speedLimit = speedLimit;
     }
 

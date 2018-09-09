@@ -51,7 +51,7 @@ public class GraphParser {
                 }
                 way.setLabel(jsonObj.getString("label"));
                 way.setDistance(jsonObj.getFloat("distance"));
-                way.setSpeedLimit(jsonObj.getFloat("speed-limit"));
+                way.setSpeedLimitKmh(jsonObj.getFloat("speed-limit"));
                 way.setTraffic(jsonObj.getFloat("traffic"));
 
                 if (jsonObj.getBoolean("two-way")) {

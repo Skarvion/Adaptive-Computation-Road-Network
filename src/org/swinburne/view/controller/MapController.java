@@ -7,28 +7,30 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
-import javafx.scene.text.Text;
 import org.swinburne.engine.AStarSearch;
 import org.swinburne.engine.Parser.OSMParser;
 import org.swinburne.model.Way;
 import org.swinburne.model.Graph;
-import org.swinburne.model.GraphParser;
 import org.swinburne.model.Node;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.net.URL;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.ResourceBundle;
 
 public class MapController implements Initializable {
-
-    private Graph graph;
 
     @FXML
     private AnchorPane drawPane;
@@ -45,80 +47,149 @@ public class MapController implements Initializable {
     @FXML
     private Button calculateButton;
 
+    @FXML
+    private RadioButton noneRadioButton;
+
+    @FXML
+    private RadioButton startRadioButton;
+
+    @FXML
+    private RadioButton finishRadioButton;
+
     private final double PANE_OFFSET = 2;
 
-    // Work around to a weird bug where the node will "go" to the combo box if selected, thus now wrap it in around simple object proeperty
+    private ToggleGroup radioGroup = new ToggleGroup();
     private ObservableList<MapNode> mapNodeObservableList = FXCollections.observableArrayList();
-
     private ObservableList<MapEdge> mapEdgeObservableList = FXCollections.observableArrayList();
+    private ObservableList<Line> solutionObservableList = FXCollections.observableArrayList();
+
+    private Graph graph;
+    private Image startPin;
+    private Image finishPin;
+    private ImageView startPinView;
+    private ImageView finishPinView;
+
+    private MapNode selectedStartNode;
+    private MapNode selectedFinishNode;
+
+    private enum NodeSelectionState { None , Start, Finish }
+    private NodeSelectionState state = NodeSelectionState.None;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-//        graph = GraphParser.generateGraph("hawthorn.json");
-        // @TODO: move the graph generation to outside the controller
-        graph = OSMParser.parseFromOSM(new File("Swinburne.osm"));
+        try {
+            startPin = new Image(new FileInputStream("start-pin.png"));
+            finishPin = new Image(new FileInputStream("finish-pin.png"));
+            startPinView = new ImageView(startPin);
+            finishPinView = new ImageView(finishPin);
 
-//        sourceNodeComboBox.setItems(mapNodeObservableList);
-//        sourceNodeComboBox.setCellFactory(param -> new MapNodeListCell());
-//        sourceNodeComboBox.setConverter(new StringConverter());
-//
-//        destinationNodeComboBox.setItems(mapNodeObservableList);
-//        destinationNodeComboBox.setCellFactory(param -> new MapNodeListCell());
-//        destinationNodeComboBox.setConverter(new StringConverter());
+            startPinView.setVisible(false);
+            finishPinView.setVisible(false);
+
+            startPinView.setPreserveRatio(true);
+            startPinView.setFitWidth(25);
+            startPinView.setFitHeight(startPinView.getImage().getHeight() / startPinView.getImage().getWidth() * startPinView.getFitWidth());
+
+            finishPinView.setPreserveRatio(true);
+            finishPinView.setFitWidth(25);
+            finishPinView.setFitHeight(finishPinView.getImage().getHeight() / finishPinView.getImage().getWidth() * finishPinView.getFitWidth());
+
+            drawPane.getChildren().add(startPinView);
+            drawPane.getChildren().add(finishPinView);
+//            startPinView.setLayoutX(100);
+//            startPinView.setLayoutY(100);
+
+            noneRadioButton.setToggleGroup(radioGroup);
+            startRadioButton.setToggleGroup(radioGroup);
+            finishRadioButton.setToggleGroup(radioGroup);
+
+            radioGroup.selectedToggleProperty().addListener((observable, oldValue, newValue) -> {
+                if (newValue == noneRadioButton) state = NodeSelectionState.None;
+                else if (newValue == startRadioButton) state = NodeSelectionState.Start;
+                else state = NodeSelectionState.Finish;
+            });
+
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
     }
 
     @FXML
     private void reload(ActionEvent event) {
+        graph = OSMParser.parseFromOSM(new File("Hawthorn.osm"));
         drawGraph();
     }
 
     @FXML
     void mapClick(MouseEvent event) {
-        System.out.println("Click!");
         closestNodeClick(event);
     }
 
     @FXML
     private void calculateAction(ActionEvent event) {
-        MapNode start = sourceNodeComboBox.getSelectionModel().getSelectedItem().get();
-        MapNode finish = destinationNodeComboBox.getSelectionModel().getSelectedItem().get();
-        if (start == null || finish == null) {
-            new Alert(Alert.AlertType.ERROR, "Source or destination node can't be empty!").showAndWait();
-            return;
+        if (selectedStartNode == null || selectedFinishNode == null) return;
+
+        drawPane.getChildren().removeAll(solutionObservableList);
+        solutionObservableList.clear();
+
+        AStarSearch search = new AStarSearch();
+        search.computeDirection(graph, selectedStartNode.getNode(), selectedFinishNode.getNode());
+
+        ArrayList<Node> result = search.getPath();
+        ArrayList<MapNode> foundMapNode = new ArrayList<>();
+
+        for (Node n : result) {
+            for (MapNode mn : mapNodeObservableList) {
+                if (mn.getNode() == n) {
+                    foundMapNode.add(mn);
+                }
+            }
         }
 
-        if (start == finish) {
-            new Alert(Alert.AlertType.ERROR, "Source and destination can't be the same!").showAndWait();
-            return;
+        System.out.println("Distance travelled: " + search.getTotalDistance());
+        System.out.println("Time taken: " + search.getTimeTaken());
+        System.out.println("Intersection passed: " + search.getIntersectionPassed());
+
+        if (foundMapNode.size() <= 1) return;
+        for (int i = 1; i < foundMapNode.size(); i++) {
+            Line solutionLine = new Line();
+            solutionLine.setStartX(foundMapNode.get(i - 1).getPosX());
+            solutionLine.setStartY(foundMapNode.get(i - 1).getPosY());
+
+            solutionLine.setEndX(foundMapNode.get(i).getPosX());
+            solutionLine.setEndY(foundMapNode.get(i).getPosY());
+            solutionLine.setStrokeWidth(4);
+            solutionLine.setStroke(Color.GREEN);
+
+            drawPane.getChildren().add(solutionLine);
+            solutionObservableList.add(solutionLine);
         }
-
-        ArrayList<Node> result = calculateDirection(start, finish);
-
-        StringBuilder output = new StringBuilder();
-
-        if (result.size() <= 1) {
-            output.append("Result is empty!");
-        }
-
-        for (int i = 0; i < result.size(); i++) {
-            if (i > 0) output.append("|\nV\n");
-            output.append(result.get(i).getLabel() + "\n");
-        }
-
-        outputTextArea.setText(output.toString());
     }
 
-    private ArrayList<Node> calculateDirection(MapNode start, MapNode finish) {
-        AStarSearch aStarSearch = new AStarSearch();
-
-        return aStarSearch.computeDirection(graph, start.getNode(), finish.getNode());
-    }
+//    private ArrayList<Node> calculateDirection(MapNode start, MapNode finish) {
+//        AStarSearch aStarSearch = new AStarSearch();
+//
+//        return aStarSearch.computeDirection(graph, start.getNode(), finish.getNode());
+//    }
 
     private void drawGraph() {
+        drawPane.getChildren().clear();
+        drawPane.getChildren().add(startPinView);
+        drawPane.getChildren().add(finishPinView);
+
+        mapNodeObservableList.clear();
+        mapEdgeObservableList.clear();
+
         if (graph.getNodeList().isEmpty()) return;
 
-        drawPane.getChildren().clear();
-        mapNodeObservableList.clear();
+        System.out.println("==============");
+        System.out.println("Rendering graph...");
+
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+        Date startDate = new Date();
+        System.out.println("Node Rendering\nStart: " + sdf.format(startDate));
+
         double topLat, botLat, leftLon, rightLon = 0;
 
         Node firstNode = graph.getNodeList().get(0);
@@ -160,33 +231,27 @@ public class MapController implements Initializable {
             mapNodeObservableList.add(temp);
         }
 
-        // Draw lines between nodes
-//        for (SimpleObjectProperty<MapNode> mn : mapNodeObservableList) {
-//            Node node = mn.get().getNode();
-//
-//            for (Way eo : node.getOutEdge()) {
-//                Node destinationNode = eo.getDestination();
-//
-//                for (SimpleObjectProperty<MapNode> mn1 : mapNodeObservableList) {
-//                    if (mn1.get() == mn.get()) continue;
-//
-//                    if (mn1.get().getNode() == destinationNode) {
-//                        MapEdge tempMapEdge = new MapEdge(eo, mn.get(), mn1.get());
-//                        drawPane.getChildren().add(tempMapEdge);
-//                        break;
-//                    }
-//                }
-//            }
-//        }
+        System.out.println("Node finished...");
+        System.out.println("Edge rendering\nStart" + sdf.format(new Date()));
 
-//        for (Way w : graph.getWayList()) {
-//            MapEdge mapEdge = new MapEdge(w);
-//            drawPane.getChildren().add(mapEdge);
-//            mapEdgeObservableList.add(mapEdge);
-//        }
+        for (Way w : graph.getWayList()) {
+            MapEdge mapEdge = new MapEdge(w);
+            mapEdgeObservableList.add(mapEdge);
+        }
+
+        System.out.println("Rendering complete...\nEnd: " + sdf.format(new Date()));
     }
 
     private MapNode closestNodeClick(MouseEvent event) {
+        if (state == NodeSelectionState.None) {
+            System.out.println("None");
+            selectedStartNode = null;
+            selectedFinishNode = null;
+            displayPin(startPinView, null);
+            displayPin(finishPinView, null);
+            return null;
+        }
+
         MapNode closestNode = null;
 
         double closeX = drawPane.getWidth() + 10;
@@ -203,9 +268,32 @@ public class MapController implements Initializable {
         }
 
         if (closestNode != null) {
-            System.out.println("Closest node is " + closestNode.getNode().getId() + "\nX: " + closestNode.getPosX() + "\nY: " + closestNode.getPosY());
+            switch (state) {
+                case Start:
+                    System.out.println("Start");
+                    selectedStartNode = closestNode;
+                    displayPin(startPinView, closestNode);
+                    break;
+                case Finish:
+                    System.out.println("Finish");
+                    selectedFinishNode = closestNode;
+                    displayPin(finishPinView, closestNode);
+                    break;
+            }
+
+//            System.out.println("Closest node is " + closestNode.getNode().getId() + "\nX: " + closestNode.getPosX() + "\nY: " + closestNode.getPosY());
         }
         return closestNode;
+    }
+
+    private void displayPin(ImageView view, MapNode node) {
+        if (node == null) {
+            view.setVisible(false);
+            return;
+        }
+        view.setVisible(true);
+        view.setLayoutX(node.getPosX() - (view.getFitWidth() / 2));
+        view.setLayoutY(node.getPosY() - view.getFitHeight());
     }
 
     public Graph getGraph() {
@@ -268,12 +356,12 @@ public class MapController implements Initializable {
         }
     }
 
-    private class MapEdge extends StackPane {
+    private class MapEdge {
         private Way way;
 
         private ArrayList<Line> lineArrayList = new ArrayList<>();
 
-        private final double STROKE_WIDTH = 1;
+        private final double STROKE_WIDTH = 2;
 
         public MapEdge(Way way) {
             this.way = way;
@@ -283,10 +371,10 @@ public class MapController implements Initializable {
             MapNode origin = getMapNode(way.getNodeOrderedList().get(0));
             if (origin == null) return;
 
-            double topMost = getMapNode(way.getNodeOrderedList().get(0)).getPosY();
-            double leftMost = getMapNode(way.getNodeOrderedList().get(0)).getPosX();
+//            double topMost = getMapNode(way.getNodeOrderedList().get(0)).getPosY();
+//            double leftMost = getMapNode(way.getNodeOrderedList().get(0)).getPosX();
 
-            for (int i = 1; i < 2; i++) {
+            for (int i = 1; i < way.getNodeOrderedList().size(); i++) {
                 try {
                     MapNode start = getMapNode(way.getNodeOrderedList().get(i));
                 } catch (IndexOutOfBoundsException ioobe) {
@@ -300,9 +388,9 @@ public class MapController implements Initializable {
 
                 double newX = getMapNode(way.getNodeOrderedList().get(i)).getPosX();
                 double newY = getMapNode(way.getNodeOrderedList().get(i)).getPosY();
-
-                if (newX < leftMost) leftMost = newX;
-                if (newY < topMost) topMost = newY;
+//
+//                if (newX < leftMost) leftMost = newX;
+//                if (newY < topMost) topMost = newY;
 
                 line.setEndX(newX);
                 line.setEndY(newY);
@@ -310,12 +398,10 @@ public class MapController implements Initializable {
                 line.setStroke(Color.BLUE);
                 line.setStrokeWidth(STROKE_WIDTH);
 
-                getChildren().add(line);
+                drawPane.getChildren().add(line);
+
                 lineArrayList.add(line);
             }
-
-            setLayoutX(leftMost);
-            setLayoutY(topMost);
         }
 
         private MapNode getMapNode(Node node) {

@@ -10,14 +10,20 @@ import org.w3c.dom.NodeList;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.File;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class OSMParser {
-
     // Reference: https://www.tutorialspoint.com/java_xml/java_dom_parse_document.htm
     public static Graph parseFromOSM(File file) {
         Graph graph = new Graph();
 
         try {
+            System.out.println("Parsing from OSM");
+            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+            Date startDate = new Date();
+            System.out.println("Start: " + sdf.format(startDate));
+
             DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
             DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
 
@@ -25,6 +31,7 @@ public class OSMParser {
 
             NodeList nodeList = doc.getElementsByTagName("node");
             for (int i = 0; i < nodeList.getLength(); i++) {
+//                if (i == 1500) System.out.println("i is " + i);
                 org.w3c.dom.Node selectednode = nodeList.item(i);
 
                 if (selectednode.getNodeType() == org.w3c.dom.Node.ELEMENT_NODE) {
@@ -70,7 +77,8 @@ public class OSMParser {
                 }
             }
 
-
+            Date end = new Date();
+            System.out.println("End: " + sdf.format(end));
 
         } catch (Exception e) {
             e.printStackTrace();
