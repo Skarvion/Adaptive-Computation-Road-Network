@@ -14,10 +14,21 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class OSMParser {
-    // Reference: https://www.tutorialspoint.com/java_xml/java_dom_parse_document.htm
+
     public static Graph parseFromOSM(File file) {
+        return parse(file, null, null, null, null);
+    }
+
+    public static Graph parseFromOSM(File file, double top, double left, double bottom, double right) {
+        return parse(file, top, left, bottom, right);
+    }
+
+    // Reference: https://www.tutorialspoint.com/java_xml/java_dom_parse_document.htm
+    private static Graph parse(File file, Double top, Double left, Double bottom, Double right) {
         Graph graph = new Graph();
 
+        boolean bounded = false;
+        if (top != null && left != null && bottom != null && right != null) bounded = true;
         try {
             System.out.println("Parsing from OSM");
             SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
@@ -31,16 +42,37 @@ public class OSMParser {
 
             NodeList nodeList = doc.getElementsByTagName("node");
             for (int i = 0; i < nodeList.getLength(); i++) {
-//                if (i == 1500) System.out.println("i is " + i);
                 org.w3c.dom.Node selectednode = nodeList.item(i);
 
                 if (selectednode.getNodeType() == org.w3c.dom.Node.ELEMENT_NODE) {
                     Element element = (Element) selectednode;
 
+                    double lat = Double.parseDouble(element.getAttribute("lat"));
+                    double lon = Double.parseDouble(element.getAttribute("lon"));
+
+                    if (bounded)
+                        if (lat > top || lat < bottom || lon < left || lon > right) continue;
+
+                    NodeList tagList = element.getElementsByTagName("tag");
+                    boolean toBreak = false;
+                    for (int j = 0; j < tagList.getLength(); j++) {
+                        Element selectedTag = (Element) tagList.item(j);
+                        if (selectedTag.getAttribute("network") == null) {
+                            System.out.println("Null");
+                            continue;
+                        }
+                        if (selectedTag.getAttribute("network").contains("PTV")) {
+                            System.out.println("Train PTV");
+                            toBreak = true;
+                            break;
+                        }
+                    }
+                    if (toBreak) break;
+
                     Node newNode = new Node();
                     newNode.setId(element.getAttribute("id"));
-                    newNode.setLatitude(Double.parseDouble(element.getAttribute("lat")));
-                    newNode.setLongtitude(Double.parseDouble(element.getAttribute("lon")));
+                    newNode.setLatitude(lat);
+                    newNode.setLongtitude(lon);
 
                     graph.addNode(newNode);
                 }

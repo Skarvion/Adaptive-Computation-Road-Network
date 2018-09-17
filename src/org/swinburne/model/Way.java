@@ -67,13 +67,27 @@ public class Way {
         else {
             // @TODO: i know i can make this part shorter, but that's future me problem
             if (pos == 0) {
-                Node[] result = new Node[1];
-                result[0] = nodeOrderedList.get(1);
-                return result;
+                if (nodeOrderedList.get(0) == nodeOrderedList.get(nodeOrderedList.size() - 1)) {
+                    Node[] result = new Node[2];
+                    result[1] = nodeOrderedList.get(nodeOrderedList.size() - 2);
+                    result[0] = nodeOrderedList.get(1);
+                    return result;
+                } else {
+                    Node[] result = new Node[1];
+                    result[0] = nodeOrderedList.get(1);
+                    return result;
+                }
             } else if (pos == (nodeOrderedList.size() - 1)) {
-                Node[] result = new Node[1];
-                result[0] = nodeOrderedList.get(nodeOrderedList.size() - 2);
-                return  result;
+                if (nodeOrderedList.get(0) == nodeOrderedList.get(nodeOrderedList.size() - 1)) {
+                    Node[] result = new Node[2];
+                    result[1] = nodeOrderedList.get(nodeOrderedList.size() - 2);
+                    result[0] = nodeOrderedList.get(1);
+                    return result;
+                } else {
+                    Node[] result = new Node[1];
+                    result[0] = nodeOrderedList.get(nodeOrderedList.size() - 2);
+                    return result;
+                }
             } else {
                 Node[] result = new Node[2];
                 result[0] = nodeOrderedList.get(pos - 1);

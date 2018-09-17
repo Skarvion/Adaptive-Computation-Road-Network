@@ -125,8 +125,9 @@ public class MapController implements Initializable {
 
     @FXML
     private void reload(ActionEvent event) {
-        graph = OSMParser.parseFromOSM(new File("Test.osm"));
-//        graph = TrafficSignalCSVParser.setTrafficIntersection(graph, "Traffic-Signal.csv");
+//        graph = OSMParser.parseFromOSM(new File("Hawthorn.osm"), -37.812234, 145.03, -37.816760, 145.041875);
+        graph = OSMParser.parseFromOSM(new File("Hawthorn.osm"));
+        graph = TrafficSignalCSVParser.setTrafficIntersection(graph, "Traffic-Signal.csv");
         drawGraph();
     }
 
@@ -316,9 +317,9 @@ public class MapController implements Initializable {
                 getChildren().add(line);
             }
 
-            if (node.getId().equalsIgnoreCase("1877118943")) {
+            if (node.getId().equalsIgnoreCase("3837155828")) {
                 circle.setFill(Color.RED);
-                circle.setRadius(RADIUS + 2);
+                circle.setRadius(RADIUS + 5);
             }
         }
 
@@ -345,6 +346,7 @@ public class MapController implements Initializable {
             return node.getLabel();
         }
     }
+
 
     private class MapEdge {
         private Way way;

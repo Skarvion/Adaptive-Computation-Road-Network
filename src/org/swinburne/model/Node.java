@@ -36,10 +36,6 @@ public class Node {
     }
 
     public boolean addWay(Way way) {
-        if (wayArrayList.size() > 0) {
-            System.out.println("Node ID: " + id);
-            System.out.println("Multiple way: " + (wayArrayList.size() + 1));
-        }
         return wayArrayList.add(way);
     }
 
