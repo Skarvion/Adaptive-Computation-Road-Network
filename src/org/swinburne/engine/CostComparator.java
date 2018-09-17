@@ -12,8 +12,7 @@ public class CostComparator implements Comparator<TreeNode<Node>> {
         double h1 = o1.getObject().getCost();
         double h2 = o2.getObject().getCost();
 
-        if (h1 > h2) return 1;
-        else if (h1 == h2) return -1;
-        else return -1;
+        if (h1 > h2) return -1;
+        else return 1;
     }
 }

@@ -1,8 +1,11 @@
 package org.swinburne.view.controller;
 
+import javafx.application.Platform;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.ObservableMap;
+import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -17,6 +20,8 @@ import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
 import org.swinburne.engine.AStarSearch;
 import org.swinburne.engine.Parser.OSMParser;
+import org.swinburne.engine.Parser.TrafficSignalCSVParser;
+import org.swinburne.model.NodeType;
 import org.swinburne.model.Way;
 import org.swinburne.model.Graph;
 import org.swinburne.model.Node;
@@ -24,6 +29,7 @@ import org.swinburne.model.Node;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.lang.reflect.Array;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -59,8 +65,8 @@ public class MapController implements Initializable {
     private final double PANE_OFFSET = 2;
 
     private ToggleGroup radioGroup = new ToggleGroup();
-    private ObservableList<MapNode> mapNodeObservableList = FXCollections.observableArrayList();
-    private ObservableList<MapEdge> mapEdgeObservableList = FXCollections.observableArrayList();
+    private ObservableMap<Node, MapNode> graphNodeMap = FXCollections.observableHashMap();
+    private ObservableList<MapEdge> graphEdgeObservableList = FXCollections.observableArrayList();
     private ObservableList<Line> solutionObservableList = FXCollections.observableArrayList();
 
     private Graph graph;
@@ -74,6 +80,8 @@ public class MapController implements Initializable {
 
     private enum NodeSelectionState { None , Start, Finish }
     private NodeSelectionState state = NodeSelectionState.None;
+
+    private float zoomFactor = 1;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -117,7 +125,8 @@ public class MapController implements Initializable {
 
     @FXML
     private void reload(ActionEvent event) {
-        graph = OSMParser.parseFromOSM(new File("Hawthorn.osm"));
+        graph = OSMParser.parseFromOSM(new File("Test.osm"));
+//        graph = TrafficSignalCSVParser.setTrafficIntersection(graph, "Traffic-Signal.csv");
         drawGraph();
     }
 
@@ -133,53 +142,29 @@ public class MapController implements Initializable {
         drawPane.getChildren().removeAll(solutionObservableList);
         solutionObservableList.clear();
 
-        AStarSearch search = new AStarSearch();
-        search.computeDirection(graph, selectedStartNode.getNode(), selectedFinishNode.getNode());
+        ArrayList<Node> searchPath = new ArrayList<>();
+        new Thread(new SearchTask(searchPath)).run();
+        if (searchPath.size() == 0) System.out.println("Search is null?");
 
-        ArrayList<Node> result = search.getPath();
-        ArrayList<MapNode> foundMapNode = new ArrayList<>();
-
-        for (Node n : result) {
-            for (MapNode mn : mapNodeObservableList) {
-                if (mn.getNode() == n) {
-                    foundMapNode.add(mn);
-                }
-            }
+        String path = "";
+        for (Node n : searchPath) {
+            path += n.getId() + "\n|\nV\n";
         }
-
-        System.out.println("Distance travelled: " + search.getTotalDistance());
-        System.out.println("Time taken: " + search.getTimeTaken());
-        System.out.println("Intersection passed: " + search.getIntersectionPassed());
-
-        if (foundMapNode.size() <= 1) return;
-        for (int i = 1; i < foundMapNode.size(); i++) {
-            Line solutionLine = new Line();
-            solutionLine.setStartX(foundMapNode.get(i - 1).getPosX());
-            solutionLine.setStartY(foundMapNode.get(i - 1).getPosY());
-
-            solutionLine.setEndX(foundMapNode.get(i).getPosX());
-            solutionLine.setEndY(foundMapNode.get(i).getPosY());
-            solutionLine.setStrokeWidth(4);
-            solutionLine.setStroke(Color.GREEN);
-
-            drawPane.getChildren().add(solutionLine);
-            solutionObservableList.add(solutionLine);
-        }
+        outputTextArea.setText(path);
     }
 
-//    private ArrayList<Node> calculateDirection(MapNode start, MapNode finish) {
-//        AStarSearch aStarSearch = new AStarSearch();
-//
-//        return aStarSearch.computeDirection(graph, start.getNode(), finish.getNode());
-//    }
-
     private void drawGraph() {
+        selectedStartNode = null;
+        selectedFinishNode = null;
+        displayPin(startPinView, null);
+        displayPin(finishPinView, null);
+
         drawPane.getChildren().clear();
         drawPane.getChildren().add(startPinView);
         drawPane.getChildren().add(finishPinView);
 
-        mapNodeObservableList.clear();
-        mapEdgeObservableList.clear();
+        graphNodeMap.clear();
+        graphEdgeObservableList.clear();
 
         if (graph.getNodeList().isEmpty()) return;
 
@@ -228,7 +213,7 @@ public class MapController implements Initializable {
 
             MapNode temp = new MapNode(n, convertedX, convertedY);
             drawPane.getChildren().add(temp);
-            mapNodeObservableList.add(temp);
+            graphNodeMap.put(n, temp);
         }
 
         System.out.println("Node finished...");
@@ -236,22 +221,13 @@ public class MapController implements Initializable {
 
         for (Way w : graph.getWayList()) {
             MapEdge mapEdge = new MapEdge(w);
-            mapEdgeObservableList.add(mapEdge);
+            graphEdgeObservableList.add(mapEdge);
         }
 
         System.out.println("Rendering complete...\nEnd: " + sdf.format(new Date()));
     }
 
     private MapNode closestNodeClick(MouseEvent event) {
-        if (state == NodeSelectionState.None) {
-            System.out.println("None");
-            selectedStartNode = null;
-            selectedFinishNode = null;
-            displayPin(startPinView, null);
-            displayPin(finishPinView, null);
-            return null;
-        }
-
         MapNode closestNode = null;
 
         double closeX = drawPane.getWidth() + 10;
@@ -259,7 +235,7 @@ public class MapController implements Initializable {
 
         double distance = Math.sqrt(Math.pow(closeX, 2) + Math.pow(closeY, 2));
 
-        for (MapNode mn : mapNodeObservableList) {
+        for (MapNode mn : graphNodeMap.values()) {
             double temp = Math.sqrt(Math.pow(mn.getPosX() - event.getX(), 2) + Math.pow(mn.getPosY() - event.getY(), 2));
             if (temp < distance) {
                 distance = temp;
@@ -269,13 +245,16 @@ public class MapController implements Initializable {
 
         if (closestNode != null) {
             switch (state) {
+                case None:
+                    System.out.println("Node ID: " + closestNode.getNode().getId());
+                    System.out.println("Ways: " + closestNode.getNode().getWayArrayList().size());
+                    System.out.println("Type: " + closestNode.getNode().getType());
+                    break;
                 case Start:
-                    System.out.println("Start");
                     selectedStartNode = closestNode;
                     displayPin(startPinView, closestNode);
                     break;
                 case Finish:
-                    System.out.println("Finish");
                     selectedFinishNode = closestNode;
                     displayPin(finishPinView, closestNode);
                     break;
@@ -294,6 +273,7 @@ public class MapController implements Initializable {
         view.setVisible(true);
         view.setLayoutX(node.getPosX() - (view.getFitWidth() / 2));
         view.setLayoutY(node.getPosY() - view.getFitHeight());
+        view.toFront();
     }
 
     public Graph getGraph() {
@@ -309,6 +289,7 @@ public class MapController implements Initializable {
     private class MapNode extends StackPane {
         private Circle circle;
         private Node node;
+        private Line line;
 
         private final double RADIUS = 2;
 
@@ -317,19 +298,28 @@ public class MapController implements Initializable {
             circle.setRadius(RADIUS);
             circle.setFill(Color.YELLOW);
             circle.setStroke(Color.BLACK);
-
             getChildren().add(circle);
-
-//            setLayoutX(x - (label.getBoundsInLocal().getWidth() / 2));
             setLayoutX(x);
             setLayoutY(y);
-
-//            System.out.println("Node: " + node.getId());
-//            System.out.println("PosX: " + getPosX());
-//            System.out.println("PosY: " + getPosY());
-//            System.out.println("-------------");
-
             this.node = node;
+
+            if (node.getType() == NodeType.Intersection) {
+                line = new Line();
+                line.setStartX(0);
+                line.setStartY(0);
+
+                line.setEndX(10);
+                line.setEndY(10);
+
+                line.setStroke(Color.PURPLE);
+                line.setStrokeWidth(3);
+                getChildren().add(line);
+            }
+
+            if (node.getId().equalsIgnoreCase("1877118943")) {
+                circle.setFill(Color.RED);
+                circle.setRadius(RADIUS + 2);
+            }
         }
 
         // This is because cannot override getLayoutX()
@@ -371,9 +361,6 @@ public class MapController implements Initializable {
             MapNode origin = getMapNode(way.getNodeOrderedList().get(0));
             if (origin == null) return;
 
-//            double topMost = getMapNode(way.getNodeOrderedList().get(0)).getPosY();
-//            double leftMost = getMapNode(way.getNodeOrderedList().get(0)).getPosX();
-
             for (int i = 1; i < way.getNodeOrderedList().size(); i++) {
                 try {
                     MapNode start = getMapNode(way.getNodeOrderedList().get(i));
@@ -388,9 +375,6 @@ public class MapController implements Initializable {
 
                 double newX = getMapNode(way.getNodeOrderedList().get(i)).getPosX();
                 double newY = getMapNode(way.getNodeOrderedList().get(i)).getPosY();
-//
-//                if (newX < leftMost) leftMost = newX;
-//                if (newY < topMost) topMost = newY;
 
                 line.setEndX(newX);
                 line.setEndY(newY);
@@ -405,12 +389,7 @@ public class MapController implements Initializable {
         }
 
         private MapNode getMapNode(Node node) {
-            for (MapNode mn : mapNodeObservableList) {
-                if (mn.getNode() == node) {
-                    return mn;
-                }
-            }
-            throw new NullPointerException();
+            return graphNodeMap.get(node);
         }
     }
 
@@ -431,6 +410,79 @@ public class MapController implements Initializable {
 
         @Override
         public SimpleObjectProperty<MapNode> fromString(String string) {
+            return null;
+        }
+    }
+
+    public void drawFrontier(Node source, Node destination) {
+        MapNode sourceMapNode = graphNodeMap.get(source);
+        MapNode destinationMapNode = graphNodeMap.get(destination);
+
+        if (sourceMapNode == null || destinationMapNode == null) return;
+
+        Line line = new Line();
+
+        line.setStartX(sourceMapNode.getPosX());
+        line.setStartY(sourceMapNode.getPosY());
+
+        line.setEndX(destinationMapNode.getPosX());
+        line.setEndY(destinationMapNode.getPosY());
+
+        line.setStrokeWidth(4);
+        line.setStroke(Color.YELLOW);
+
+        drawPane.getChildren().add(line);
+        solutionObservableList.add(line);
+    }
+
+    private class SearchTask extends Task<Void> {
+
+        private ArrayList<Node> resultPath;
+
+        private SearchTask(ArrayList<Node> resultPath) {
+            this.resultPath = resultPath;
+        }
+
+        @Override
+        protected Void call() throws Exception {
+            AStarSearch search = new AStarSearch();
+            search.setMapController(MapController.this);
+            search.computeDirection(graph, selectedStartNode.getNode(), selectedFinishNode.getNode());
+
+            ArrayList<Node> test = search.getPath();
+            resultPath = test;
+            if (resultPath.size() == 0) System.out.println("Test is null?");
+
+            ArrayList<MapNode> foundMapNode = new ArrayList<>();
+
+            for (Node n : resultPath) {
+                MapNode found = graphNodeMap.get(n);
+                if (found != null) foundMapNode.add(found);
+            }
+
+            System.out.println("Distance travelled: " + search.getTotalDistance());
+            System.out.println("Time taken: " + search.getTimeTaken());
+            System.out.println("Intersection passed: " + search.getIntersectionPassed());
+
+            if (foundMapNode.size() <= 1) return null;
+
+            Platform.runLater(() -> {
+                for (int i = 1; i < foundMapNode.size(); i++) {
+                    Line solutionLine = new Line();
+                    solutionLine.setStartX(foundMapNode.get(i - 1).getPosX());
+                    solutionLine.setStartY(foundMapNode.get(i - 1).getPosY());
+
+                    solutionLine.setEndX(foundMapNode.get(i).getPosX());
+                    solutionLine.setEndY(foundMapNode.get(i).getPosY());
+                    solutionLine.setStrokeWidth(4);
+                    solutionLine.setStroke(Color.GREEN);
+                    solutionLine.toFront();
+
+                    drawPane.getChildren().add(solutionLine);
+                    solutionObservableList.add(solutionLine);
+                }
+            });
+
             return null;
         }
     }

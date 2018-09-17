@@ -4,7 +4,8 @@ public class UnitConverter {
     private static final float EARTH_RADIUS_METRE = 6371000;
 
     public static double kmhToMs(double kmh) {
-        return kmh * 1000 / 3600;
+        double result = kmh * 1000 / 3600;
+        return result;
     }
 
     // Harvesine formula

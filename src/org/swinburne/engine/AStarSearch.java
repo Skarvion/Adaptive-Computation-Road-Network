@@ -1,18 +1,19 @@
 package org.swinburne.engine;
 
+import javafx.application.Platform;
 import org.swinburne.model.Way;
 import org.swinburne.model.Graph;
 import org.swinburne.model.Node;
 import org.swinburne.model.Tree.Tree;
 import org.swinburne.model.Tree.TreeNode;
 import org.swinburne.util.UnitConverter;
+import org.swinburne.view.controller.MapController;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.PriorityQueue;
+import java.util.concurrent.TimeUnit;
 
-
-// @Note: at the moment this class is used for
 public class AStarSearch {
     private ArrayList<Node> path = new ArrayList<>();
     private double totalDistance;
@@ -20,6 +21,8 @@ public class AStarSearch {
 
     private int intersectionPassed = 0;
     private final double AVERAGE_INTERSECTION_WAITING_TIME_S = 30;
+
+    private MapController mapController;
 
     public void computeDirection(Graph graph, Node start, Node destination) {
         HeuristicEngine.generateHeuristic(graph, destination);
@@ -37,6 +40,8 @@ public class AStarSearch {
         rootNode.setCost(start.getHeuristic());
         frontiers.add(rootNode);
 
+        ArrayList<Node> visited = new ArrayList<>();
+
         TreeNode<Node> selectedNode;
         while ((selectedNode = frontiers.poll()) != null) {
             if (selectedNode.getObject() == destination) {
@@ -44,15 +49,34 @@ public class AStarSearch {
                 return;
             }
 
+
+            boolean test = false;
+            if (selectedNode.getObject().getId().equalsIgnoreCase("1877118943")) test = true;
+            int waycount = 0;
             for (Way w : selectedNode.getObject().getWayArrayList()) {
+                waycount++;
+//                if (waycount >= 2) System.out.println("Node ID " +  selectedNode.getObject().getId() + ", Way count: " + waycount);
+                if (test) {
+                    System.out.println("Ways: " + w.getId());
+                }
+
+
                 Node[] adjacentNodes = w.getAdjacents(selectedNode.getObject());
-                if (adjacentNodes == null) continue;
+                if (adjacentNodes == null) {
+//                    System.out.println("Node ID " + selectedNode.getObject().getId() + " dead-end");
+                    continue;
+                }
 
                 double speedLimitS = UnitConverter.kmhToMs(w.getSpeedLimitKmh());
                 for (Node n : adjacentNodes) {
+                    System.out.println(n.getId());
+                    if (visited.contains(n)) continue;
+
+                    visited.add(n);
                     boolean intersection = false;
                     TreeNode<Node> treeNode = new TreeNode<>(n);
                     selectedNode.addChild(treeNode);
+
                     double distance = UnitConverter.geopositionDistance(selectedNode.getObject().getLatitude(), selectedNode.getObject().getLongitude(), n.getLatitude(), n.getLongitude());
 
                     double timeS = distance / speedLimitS;
@@ -66,6 +90,11 @@ public class AStarSearch {
                     treeNode.setCost(selectedNode.getCost() + distance + n.getHeuristic());
 
 //                    treeNode.putMetaData("time", calculateTravelTime(w, selectedNode.getMetaData("time")) + (intersection ? 30 : 0));
+
+                    if (mapController != null) {
+                        Node tn = selectedNode.getObject();
+                        Platform.runLater(() -> mapController.drawFrontier(tn, n));
+                    }
 
                     frontiers.add(treeNode);
                 }
@@ -83,34 +112,14 @@ public class AStarSearch {
         return time;
     }
 
-//    // For now not being used, @TODO maybe look over here again later
-//    private double calculateTravelCost(Node node, Way way) {
-//        return way.getDistance() + node.getHeuristic();
-//    }
-//
-//    private ArrayList<Node> deriveSolution(TreeNode<Node> endNode) {
-//        ArrayList<Node> result = new ArrayList<>();
-//
-//        while (endNode != null)  {
-//            result.add(endNode.getObject());
-//            endNode = endNode.getParent();
-//        }
-//        Collections.reverse(result);
-//        return result;
-//    }
-//
-//    public double calculateTravelTime(ArrayList<Node> path) {
-//        if (path == null) return -1;
-//        if (path.size() <= 1) return 0;
-//
-//        double total = 0;
-//
-//        for (int i = 1; i < path.size(); i++) {
-//            double distance = UnitConverter.geopositionDistance(path.get(i - 1).getLatitude(), path.get(i - 1).getLongitude(), path.get(i).getLatitude(), path.get(i).getLongitude());
-//
-//
-//        }
-//    }
+    private boolean isRecurringNode(TreeNode node) {
+        TreeNode selectedNode = node;
+        while (selectedNode.getParent() != null) {
+            selectedNode = selectedNode.getParent();
+            if (selectedNode.getObject() == node.getObject()) return true;
+        }
+        return false;
+    }
 
     private ArrayList<Node> deriveSolution(TreeNode<Node> destination) {
         ArrayList<Node> result = new ArrayList<>();
@@ -123,6 +132,7 @@ public class AStarSearch {
             selectedTreeNode = selectedTreeNode.getParent();
         }
         Collections.reverse(result);
+        path = result;
 
         return result;
     }
@@ -142,4 +152,9 @@ public class AStarSearch {
     public int getIntersectionPassed() {
         return intersectionPassed;
     }
+
+    public void setMapController(MapController mapController) {
+        this.mapController = mapController;
+    }
+
 }

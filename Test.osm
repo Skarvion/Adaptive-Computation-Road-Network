@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<osm version="0.6" generator="CGImap 0.6.1 (1974 thorn-01.openstreetmap.org)" copyright="OpenStreetMap and contributors" attribution="http://www.openstreetmap.org/copyright" license="http://opendatacommons.org/licenses/odbl/1-0/">
+ <bounds minlat="-37.8235800" minlon="145.0333600" maxlat="-37.8184400" maxlon="145.0442600"/>
+ <node id="0" visible="true" version="1" timestamp="2009-12-23T10:44:13Z" lat="-37.739001" lon="145.057976"/>
+ <node id="1" visible="true" version="1" timestamp="2018-09-15T00:00:00Z" lat="-37.739001" lon="145.047976"/>
+ <node id="2" visible="true" version="1" timestamp="2018-09-15T00:00:00Z" lat="-37.739001" lon="145.052976"/>
+ <node id="3" visible="true" version="1" timestamp="2018-09-15T00:00:00Z" lat="-37.729001" lon="145.057976"/>
+ <node id="4" visible="true" version="1" timestamp="2018-09-15T00:00:00Z" lat="-37.734001" lon="145.057976"/>
+ <node id="5" visible="true" version="1" timestamp="2018-09-15T00:00:00Z" lat="-37.739001" lon="145.067976"/>
+ <node id="6" visible="true" version="1" timestamp="2018-09-15T00:00:00Z" lat="-37.739001" lon="145.062976"/>
+ <node id="7" visible="true" version="1" timestamp="2018-09-15T00:00:00Z" lat="-37.749001" lon="145.057976"/>
+ <node id="8" visible="true" version="1" timestamp="2018-09-15T00:00:00Z" lat="-37.744001" lon="145.057976"/>
+
+ <way id="10" visible="true" version="1" changeset="55024629" timestamp="2018-09-15T00:00:00Z">
+  <nd ref="1"/>
+  <nd ref="2"/>
+  <nd ref="0"/>
+  <nd ref="6"/>
+  <nd ref="5"/>
+  <nd ref="1"/>
+ </way>
+ <way id="11" visible="true" version="1" changeset="55024629" timestamp="2018-09-15T00:00:00Z">
+  <nd ref="3"/>
+  <nd ref="4"/>
+  <nd ref="0"/>
+  <nd ref="7"/>
+  <nd ref="8"/>
+  <nd ref="3"/>
+ </way>
+</osm>

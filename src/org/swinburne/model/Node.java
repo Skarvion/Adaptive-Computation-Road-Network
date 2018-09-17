@@ -10,6 +10,7 @@ public class Node {
     private double latitude;
     private double longtitude;
     private double heuristic;
+    private NodeType type = NodeType.Road;
 
     //@TODO: decide whether leave it here or separate it to another class
     private double cost;
@@ -34,7 +35,13 @@ public class Node {
         this.label = label;
     }
 
-    public boolean addWay(Way way) { return wayArrayList.add(way); }
+    public boolean addWay(Way way) {
+        if (wayArrayList.size() > 0) {
+            System.out.println("Node ID: " + id);
+            System.out.println("Multiple way: " + (wayArrayList.size() + 1));
+        }
+        return wayArrayList.add(way);
+    }
 
     public ArrayList<Way> getWayArrayList() { return wayArrayList; }
 
@@ -68,5 +75,13 @@ public class Node {
 
     public void setCost(double cost) {
         this.cost = cost;
+    }
+
+    public NodeType getType() {
+        return type;
+    }
+
+    public void setType(NodeType type) {
+        this.type = type;
     }
 }
