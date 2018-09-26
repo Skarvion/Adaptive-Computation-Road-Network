@@ -62,6 +62,12 @@ public class MapController implements Initializable {
     @FXML
     private RadioButton finishRadioButton;
 
+    @FXML
+    private Button zoomInButton;
+
+    @FXML
+    private Button zoomOutButton;
+
     private final double PANE_OFFSET = 2;
 
     private ToggleGroup radioGroup = new ToggleGroup();
@@ -104,8 +110,6 @@ public class MapController implements Initializable {
 
             drawPane.getChildren().add(startPinView);
             drawPane.getChildren().add(finishPinView);
-//            startPinView.setLayoutX(100);
-//            startPinView.setLayoutY(100);
 
             noneRadioButton.setToggleGroup(radioGroup);
             startRadioButton.setToggleGroup(radioGroup);
@@ -116,7 +120,6 @@ public class MapController implements Initializable {
                 else if (newValue == startRadioButton) state = NodeSelectionState.Start;
                 else state = NodeSelectionState.Finish;
             });
-
 
         } catch (FileNotFoundException e) {
             e.printStackTrace();
@@ -154,6 +157,48 @@ public class MapController implements Initializable {
         outputTextArea.setText(path);
     }
 
+    @FXML
+    void zoomIn(ActionEvent event) {
+        float newZoomFactor = zoomFactor + 0.5f;
+
+        for (MapNode mn : graphNodeMap.values()) {
+            mn.setLayoutX(mn.getLayoutX() * newZoomFactor / zoomFactor);
+            mn.setLayoutY(mn.getLayoutY() * newZoomFactor / zoomFactor);
+        }
+
+        drawPane.setPrefWidth(drawPane.getPrefWidth() * newZoomFactor / zoomFactor);
+        drawPane.setPrefHeight(drawPane.getPrefHeight() * newZoomFactor / zoomFactor);
+
+        redrawEdges();
+    }
+
+    private void redrawEdges() {
+        for (MapEdge me : graphEdgeObservableList) {
+            me.clearLines();
+        }
+        graphEdgeObservableList.clear();
+
+        for (Way w : graph.getWayList()) {
+            MapEdge mapEdge = new MapEdge(w);
+            graphEdgeObservableList.add(mapEdge);
+        }
+    }
+
+    @FXML
+    void zoomOut(ActionEvent event) {
+        float newZoomFactor = zoomFactor - 0.5f;
+
+        for (MapNode mn : graphNodeMap.values()) {
+            mn.setLayoutX(mn.getLayoutX() * newZoomFactor / zoomFactor);
+            mn.setLayoutY(mn.getLayoutY() * newZoomFactor / zoomFactor);
+        }
+
+        drawPane.setPrefWidth(drawPane.getPrefWidth() * newZoomFactor / zoomFactor);
+        drawPane.setPrefHeight(drawPane.getPrefHeight() * newZoomFactor / zoomFactor);
+
+        redrawEdges();
+    }
+
     private void drawGraph() {
         selectedStartNode = null;
         selectedFinishNode = null;
@@ -185,12 +230,7 @@ public class MapController implements Initializable {
         leftLon = firstNode.getLongitude();
         rightLon = firstNode.getLongitude();
 
-        //@TODO: I messed around here to make test the first 10 isntances
-//        int instances = 0;
         for (Node n : graph.getNodeList()) {
-//            instances++;
-//            if (instances > 10) break;
-
             if (n.getLatitude() > topLat) topLat = n.getLatitude();
             if (n.getLatitude() < botLat) botLat = n.getLatitude();
             if (n.getLongitude() > rightLon) rightLon = n.getLongitude();
@@ -202,15 +242,12 @@ public class MapController implements Initializable {
         double graphWidth = Math.abs(rightLon - leftLon);
         double graphHeight = Math.abs(topLat - botLat);
 
-//        instances = 0;
         for (Node n : graph.getNodeList()) {
-//            instances++;
-//            if (instances > 10) break;
             double relY = Math.abs(topLat - n.getLatitude());
             double relX = Math.abs(leftLon - n.getLongitude());
 
-            double convertedX = (relX * paneWidth / graphWidth) + PANE_OFFSET;
-            double convertedY = (relY * paneHeight / graphHeight) + PANE_OFFSET;
+            double convertedX = ((relX * paneWidth / graphWidth) * zoomFactor) + PANE_OFFSET;
+            double convertedY = ((relY * paneHeight / graphHeight) * zoomFactor) + PANE_OFFSET;
 
             MapNode temp = new MapNode(n, convertedX, convertedY);
             drawPane.getChildren().add(temp);
@@ -321,6 +358,9 @@ public class MapController implements Initializable {
                 circle.setFill(Color.RED);
                 circle.setRadius(RADIUS + 5);
             }
+
+            setLayoutX(getLayoutX() + 20);
+            setLayoutY(getLayoutY() + 20);
         }
 
         // This is because cannot override getLayoutX()
@@ -388,6 +428,14 @@ public class MapController implements Initializable {
 
                 lineArrayList.add(line);
             }
+        }
+
+        private void clearLines() {
+            for (Line l : lineArrayList) {
+                drawPane.getChildren().remove(l);
+            }
+//            drawPane.getChildren().remove(lineArrayList);
+            lineArrayList.clear();
         }
 
         private MapNode getMapNode(Node node) {

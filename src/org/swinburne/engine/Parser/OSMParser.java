@@ -12,6 +12,8 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 public class OSMParser {
 
@@ -54,20 +56,6 @@ public class OSMParser {
                         if (lat > top || lat < bottom || lon < left || lon > right) continue;
 
                     NodeList tagList = element.getElementsByTagName("tag");
-                    boolean toBreak = false;
-                    for (int j = 0; j < tagList.getLength(); j++) {
-                        Element selectedTag = (Element) tagList.item(j);
-                        if (selectedTag.getAttribute("network") == null) {
-                            System.out.println("Null");
-                            continue;
-                        }
-                        if (selectedTag.getAttribute("network").contains("PTV")) {
-                            System.out.println("Train PTV");
-                            toBreak = true;
-                            break;
-                        }
-                    }
-                    if (toBreak) break;
 
                     Node newNode = new Node();
                     newNode.setId(element.getAttribute("id"));
@@ -98,13 +86,11 @@ public class OSMParser {
                             Node foundNode = graph.findNodeByID(nodeElement.getAttribute("ref"));
                             if (foundNode != null) {
                                 way.addNode(foundNode);
-//                                System.out.println("Attaching " + foundNode.getId());
                             }
                         }
                     }
 
-                    graph.addWay(way);
-//                    System.out.println("----------------");
+                    if (way.getNodeOrderedList().size() > 0) graph.addWay(way);
 
                 }
             }
@@ -117,6 +103,22 @@ public class OSMParser {
         }
 
         return graph;
+    }
+
+    private Map<String, String> getTagList(Element element) {
+        Map<String, String> tagMap = new HashMap<>();
+        NodeList tagList = element.getElementsByTagName("tag");
+
+        for (int i = 0; i < tagList.getLength(); i++) {
+            org.w3c.dom.Node selectedTag = tagList.item(i);
+
+            if (selectedTag.getNodeType() == org.w3c.dom.Node.ELEMENT_NODE) {
+                Element tagElement = (Element) selectedTag;
+                tagMap.put(tagElement.getAttribute("k"), tagElement.getAttribute("v"));
+            }
+        }
+
+        return tagMap;
     }
 
 }

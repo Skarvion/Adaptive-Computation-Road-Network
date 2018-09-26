@@ -4,6 +4,7 @@
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.RadioButton?>
+<?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.TextArea?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.ColumnConstraints?>
@@ -15,9 +16,13 @@
 
 <HBox xmlns="http://javafx.com/javafx/9.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.swinburne.view.controller.MapController">
    <children>
-      <AnchorPane fx:id="drawPane" minHeight="500.0" minWidth="500.0" onMouseClicked="#mapClick" prefHeight="600.0" prefWidth="600.0" style="-fx-background-color: white;">
+      <ScrollPane maxHeight="900.0" maxWidth="900.0" HBox.hgrow="NEVER">
+         <content>
+            <AnchorPane fx:id="drawPane" onMouseClicked="#mapClick" prefHeight="850.0" prefWidth="850.0" style="-fx-background-color: white;">
 
 </AnchorPane>
+         </content>
+      </ScrollPane>
       <VBox maxWidth="1.7976931348623157E308">
          <children>
             <Button fx:id="reloadButton" mnemonicParsing="false" onAction="#reload" text="Reload" />
@@ -49,6 +54,8 @@
                   <Font name="Consolas" size="12.0" />
                </font>
             </TextArea>
+            <Button fx:id="zoomInButton" mnemonicParsing="false" onAction="#zoomIn" text="Zoom In" />
+            <Button fx:id="zoomOutButton" mnemonicParsing="false" onAction="#zoomOut" text="Zoom Out" />
             <Button fx:id="calculateButton" mnemonicParsing="false" onAction="#calculateAction" text="Calculate" />
          </children>
       </VBox>

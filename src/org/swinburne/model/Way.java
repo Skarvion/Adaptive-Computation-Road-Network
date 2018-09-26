@@ -15,7 +15,8 @@ public class Way {
     private float speedLimit = 40; // speed limit is 40 km/h by default
     // Traffic coefficient limit 0.01 to 1
     private float traffic;
-    private boolean twoWay;
+
+    private WayType wayType = WayType.Road;
 
     private ArrayList<Node> nodeOrderedList = new ArrayList<>();
     private Map<String, Double> metaData = new HashMap<>();
@@ -145,11 +146,11 @@ public class Way {
         this.traffic = traffic;
     }
 
-    public boolean isTwoWay() {
-        return twoWay;
+    public WayType getWayType() {
+        return wayType;
     }
 
-    public void setTwoWay(boolean twoWay) {
-        this.twoWay = twoWay;
+    public void setWayType(WayType wayType) {
+        this.wayType = wayType;
     }
 }
