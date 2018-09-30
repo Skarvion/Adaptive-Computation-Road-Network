@@ -15,6 +15,15 @@ public class Node {
     //@TODO: decide whether leave it here or separate it to another class
     private double cost;
 
+    public Node() {
+
+    }
+
+    public Node(double latitude, double longitude) {
+        this.latitude = latitude;
+        this.longtitude = longitude;
+    }
+
     private ArrayList<Way> wayArrayList = new ArrayList<>();
 
     private Map<String, Float> metadata = new HashMap<>();

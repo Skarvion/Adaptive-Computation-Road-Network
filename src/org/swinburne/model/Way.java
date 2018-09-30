@@ -52,6 +52,21 @@ public class Way {
         return -1;
     }
 
+    public void setNodeList(ArrayList<Node> nodeList) {
+        this.nodeOrderedList = nodeList;
+        for (Node n : nodeList) {
+            boolean found = false;
+            for (Way w : n.getWayArrayList()) {
+                if (w == this) {
+                    found = true;
+                    break;
+                }
+            }
+            if (found) break;
+            else n.addWay(this);
+        }
+    }
+
     /**
      * Return the adjacent nodes in this way. Return an array of possible maximum two adjacent node in this ordered list.
      * If there are two possibilities, first element will always be the one before, and the second one is the one after

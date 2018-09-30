@@ -19,6 +19,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
 import org.swinburne.engine.AStarSearch;
+import org.swinburne.engine.Parser.MapTrafficSignalCSVParser;
 import org.swinburne.engine.Parser.OSMParser;
 import org.swinburne.engine.Parser.TrafficSignalCSVParser;
 import org.swinburne.model.NodeType;
@@ -129,8 +130,10 @@ public class MapController implements Initializable {
     @FXML
     private void reload(ActionEvent event) {
 //        graph = OSMParser.parseFromOSM(new File("Hawthorn.osm"), -37.812234, 145.03, -37.816760, 145.041875);
-        graph = OSMParser.parseFromOSM(new File("Hawthorn.osm"));
-        graph = TrafficSignalCSVParser.setTrafficIntersection(graph, "Traffic-Signal.csv");
+//        graph = OSMParser.parseFromOSM(new File("Hawthorn.osm"));
+//        graph = TrafficSignalCSVParser.setTrafficIntersection(graph, "Traffic-Signal.csv");
+
+        graph = MapTrafficSignalCSVParser.parseFromTrafficSignal("Traffic-Signal.csv", -37.802190, 144.939755, -37.819231, 144.979215);
         drawGraph();
     }
 
@@ -155,6 +158,10 @@ public class MapController implements Initializable {
             path += n.getId() + "\n|\nV\n";
         }
         outputTextArea.setText(path);
+
+//        for (MapNode mn : graphNodeMap.values()) {
+//            mn.getNode().setLabel(mn.getNode().getHeuristic());
+//        }
     }
 
     @FXML
@@ -328,6 +335,7 @@ public class MapController implements Initializable {
         private Circle circle;
         private Node node;
         private Line line;
+        private Label label;
 
         private final double RADIUS = 2;
 
@@ -341,11 +349,13 @@ public class MapController implements Initializable {
             setLayoutY(y);
             this.node = node;
 
+            label = new Label(node.getLabel());
+            getChildren().add(label);
+
             if (node.getType() == NodeType.Intersection) {
                 line = new Line();
                 line.setStartX(0);
                 line.setStartY(0);
-
                 line.setEndX(10);
                 line.setEndY(10);
 
@@ -359,14 +369,19 @@ public class MapController implements Initializable {
                 circle.setRadius(RADIUS + 5);
             }
 
-            setLayoutX(getLayoutX() + 20);
-            setLayoutY(getLayoutY() + 20);
+            setLayoutX(getLayoutX() + (label.getBoundsInLocal().getWidth() / 2));
+//            setLayoutX(getLayoutX() + 20);
+            setLayoutY(getLayoutY());
+        }
+
+        public void redraw() {
+            label.setText(node.getLabel());
         }
 
         // This is because cannot override getLayoutX()
         public double getPosX() {
-            return getLayoutX() + RADIUS;
-//            return getLayoutX() + (label.getBoundsInLocal().getWidth() / 2);
+//            return getLayoutX() + RADIUS;
+            return getLayoutX() + (label.getBoundsInLocal().getWidth() / 2);
         }
 
         public double getPosY() {
