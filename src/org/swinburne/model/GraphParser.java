@@ -28,7 +28,7 @@ public class GraphParser {
                 }
                 node.setLabel(jsonObj.getString("label"));
                 node.setLatitude(jsonObj.getDouble("latitude"));
-                node.setLongtitude(jsonObj.getDouble("longitude"));
+                node.setLongitude(jsonObj.getDouble("longitude"));
 
                 result.addNode(node);
             }

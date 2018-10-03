@@ -9,8 +9,8 @@ public class CostComparator implements Comparator<TreeNode<Node>> {
 
     @Override
     public int compare(TreeNode<Node> o1, TreeNode<Node> o2) {
-        double h1 = o1.getObject().getCost();
-        double h2 = o2.getObject().getCost();
+        double h1 = o1.getObject().getGCost();
+        double h2 = o2.getObject().getGCost();
 
         if (h1 > h2) return -1;
         else return 1;

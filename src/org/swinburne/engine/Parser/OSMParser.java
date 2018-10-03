@@ -60,7 +60,7 @@ public class OSMParser {
                     Node newNode = new Node();
                     newNode.setId(element.getAttribute("id"));
                     newNode.setLatitude(lat);
-                    newNode.setLongtitude(lon);
+                    newNode.setLongitude(lon);
 
                     graph.addNode(newNode);
                 }

@@ -8,12 +8,11 @@ public class Node {
     private String id;
     private String label;
     private double latitude;
-    private double longtitude;
-    private double heuristic;
+    private double longitude;
     private NodeType type = NodeType.Road;
 
-    //@TODO: decide whether leave it here or separate it to another class
-    private double cost;
+    private double fValue;
+    private double gCost;
 
     public Node() {
 
@@ -21,7 +20,7 @@ public class Node {
 
     public Node(double latitude, double longitude) {
         this.latitude = latitude;
-        this.longtitude = longitude;
+        this.longitude = longitude;
     }
 
     private ArrayList<Way> wayArrayList = new ArrayList<>();
@@ -59,27 +58,27 @@ public class Node {
     }
 
     public double getLongitude() {
-        return longtitude;
+        return longitude;
     }
 
-    public void setLongtitude(double longtitude) {
-        this.longtitude = longtitude;
+    public void setLongitude(double longitude) {
+        this.longitude = longitude;
     }
 
-    public double getHeuristic() {
-        return heuristic;
+    public double getFValue() {
+        return fValue;
     }
 
-    public void setHeuristic(double heuristic) {
-        this.heuristic = heuristic;
+    public void setFValue(double fValue) {
+        this.fValue = fValue;
     }
 
-    public double getCost() {
-        return cost;
+    public double getGCost() {
+        return gCost;
     }
 
-    public void setCost(double cost) {
-        this.cost = cost;
+    public void setGCost(double gCost) {
+        this.gCost = gCost;
     }
 
     public NodeType getType() {

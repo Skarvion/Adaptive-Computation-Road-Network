@@ -2,8 +2,6 @@ package org.swinburne.engine.HeuristicSetting;
 
 import org.swinburne.model.Graph;
 import org.swinburne.model.Node;
-import org.swinburne.model.Tree.Tree;
-import org.swinburne.model.Tree.TreeNode;
 import org.swinburne.util.UnitConverter;
 
 public class StraightLineDistance extends HeuristicSetting {
@@ -22,7 +20,7 @@ public class StraightLineDistance extends HeuristicSetting {
     @Override
     public double calculateHeuristic(Graph graph, Node node, Node destination) {
         double d = UnitConverter.geopositionDistance(node.getLatitude(), node.getLongitude(), destination.getLatitude(), destination.getLongitude());
-        node.setHeuristic(d);
+        node.setFValue(d);
 
         return d;
     }

@@ -12,7 +12,6 @@ import org.swinburne.view.controller.MapController;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.PriorityQueue;
-import java.util.concurrent.TimeUnit;
 
 public class AStarSearch {
     private ArrayList<Node> path = new ArrayList<>();
@@ -37,10 +36,12 @@ public class AStarSearch {
         TreeNode<Node> rootNode = new TreeNode<>(start);
         Tree<Node> tree = new Tree<>(rootNode);
 
-        rootNode.setCost(start.getHeuristic());
+        rootNode.setCost(start.getFValue());
         frontiers.add(rootNode);
 
         ArrayList<Node> visited = new ArrayList<>();
+
+        int index = 0;
 
         TreeNode<Node> selectedNode;
         while ((selectedNode = frontiers.poll()) != null) {
@@ -48,7 +49,6 @@ public class AStarSearch {
                 deriveSolution(selectedNode);
                 return;
             }
-
 
             boolean test = false;
             if (selectedNode.getObject().getId().equalsIgnoreCase("1877118943")) test = true;
@@ -87,7 +87,7 @@ public class AStarSearch {
 
                     treeNode.setTime(selectedNode.getTime() + timeS + (intersection ? 30 : 0));
                     treeNode.setDistance(selectedNode.getDistance() + distance);
-                    treeNode.setCost(selectedNode.getCost() + distance + n.getHeuristic());
+                    treeNode.setCost(selectedNode.getCost() + distance + n.getFValue());
 
 //                    treeNode.putMetaData("time", calculateTravelTime(w, selectedNode.getMetaData("time")) + (intersection ? 30 : 0));
 

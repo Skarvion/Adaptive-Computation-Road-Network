@@ -160,7 +160,7 @@ public class MapController implements Initializable {
         outputTextArea.setText(path);
 
 //        for (MapNode mn : graphNodeMap.values()) {
-//            mn.getNode().setLabel(mn.getNode().getHeuristic());
+//            mn.getNode().setLabel(mn.getNode().getFValue());
 //        }
     }
 
