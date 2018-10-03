@@ -14,6 +14,9 @@ public class Node {
     private double fValue;
     private double gCost;
 
+    private Node parent = null;
+    private ArrayList<Node> childrenList = new ArrayList<>();
+
     public Node() {
 
     }
@@ -88,4 +91,18 @@ public class Node {
     public void setType(NodeType type) {
         this.type = type;
     }
+
+    public Node getParent() {
+        return parent;
+    }
+
+    public void setParent(Node parent) {
+        this.parent = parent;
+    }
+
+    public boolean addChild(Node child) {
+        return this.childrenList.add(child);
+    }
+
+    public ArrayList<Node> getChildren() { return this.childrenList; }
 }

@@ -20,17 +20,13 @@ import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
 import org.swinburne.engine.AStarSearch;
 import org.swinburne.engine.Parser.MapTrafficSignalCSVParser;
-import org.swinburne.engine.Parser.OSMParser;
-import org.swinburne.engine.Parser.TrafficSignalCSVParser;
-import org.swinburne.model.NodeType;
-import org.swinburne.model.Way;
 import org.swinburne.model.Graph;
 import org.swinburne.model.Node;
+import org.swinburne.model.NodeType;
+import org.swinburne.model.Way;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.lang.reflect.Array;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -41,12 +37,6 @@ public class MapController implements Initializable {
 
     @FXML
     private AnchorPane drawPane;
-
-    @FXML
-    private ComboBox<SimpleObjectProperty<MapNode>> sourceNodeComboBox;
-
-    @FXML
-    private ComboBox<SimpleObjectProperty<MapNode>> destinationNodeComboBox;
 
     @FXML
     private TextArea outputTextArea;
@@ -150,14 +140,7 @@ public class MapController implements Initializable {
         solutionObservableList.clear();
 
         ArrayList<Node> searchPath = new ArrayList<>();
-        new Thread(new SearchTask(searchPath)).run();
-        if (searchPath.size() == 0) System.out.println("Search is null?");
-
-        String path = "";
-        for (Node n : searchPath) {
-            path += n.getId() + "\n|\nV\n";
-        }
-        outputTextArea.setText(path);
+        new Thread(new SearchTask(searchPath)).start();
 
 //        for (MapNode mn : graphNodeMap.values()) {
 //            mn.getNode().setLabel(mn.getNode().getFValue());
@@ -479,28 +462,7 @@ public class MapController implements Initializable {
         }
     }
 
-    public void drawFrontier(Node source, Node destination) {
-        MapNode sourceMapNode = graphNodeMap.get(source);
-        MapNode destinationMapNode = graphNodeMap.get(destination);
-
-        if (sourceMapNode == null || destinationMapNode == null) return;
-
-        Line line = new Line();
-
-        line.setStartX(sourceMapNode.getPosX());
-        line.setStartY(sourceMapNode.getPosY());
-
-        line.setEndX(destinationMapNode.getPosX());
-        line.setEndY(destinationMapNode.getPosY());
-
-        line.setStrokeWidth(4);
-        line.setStroke(Color.YELLOW);
-
-        drawPane.getChildren().add(line);
-        solutionObservableList.add(line);
-    }
-
-    private class SearchTask extends Task<Void> {
+    public class SearchTask extends Task<Void> {
 
         private ArrayList<Node> resultPath;
 
@@ -511,7 +473,7 @@ public class MapController implements Initializable {
         @Override
         protected Void call() throws Exception {
             AStarSearch search = new AStarSearch();
-            search.setMapController(MapController.this);
+            search.setMapController(this);
             search.computeDirection(graph, selectedStartNode.getNode(), selectedFinishNode.getNode());
 
             ArrayList<Node> test = search.getPath();
@@ -528,6 +490,12 @@ public class MapController implements Initializable {
             System.out.println("Distance travelled: " + search.getTotalDistance());
             System.out.println("Time taken: " + search.getTimeTaken());
             System.out.println("Intersection passed: " + search.getIntersectionPassed());
+
+            String path = "";
+            for (Node n : resultPath) {
+                path += n.getId() + "\n|\nV\n";
+            }
+            outputTextArea.setText(path);
 
             if (foundMapNode.size() <= 1) return null;
 
@@ -549,6 +517,34 @@ public class MapController implements Initializable {
             });
 
             return null;
+        }
+
+        public void drawFrontier(Node source, Node destination) {
+            try {
+                Thread.sleep(100);
+                Platform.runLater(() -> {
+                    MapNode sourceMapNode = graphNodeMap.get(source);
+                    MapNode destinationMapNode = graphNodeMap.get(destination);
+
+                    if (sourceMapNode == null || destinationMapNode == null) return;
+
+                    Line line = new Line();
+
+                    line.setStartX(sourceMapNode.getPosX());
+                    line.setStartY(sourceMapNode.getPosY());
+
+                    line.setEndX(destinationMapNode.getPosX());
+                    line.setEndY(destinationMapNode.getPosY());
+
+                    line.setStrokeWidth(4);
+                    line.setStroke(Color.YELLOW);
+
+                    drawPane.getChildren().add(line);
+                    solutionObservableList.add(line);
+                });
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
     }
 }

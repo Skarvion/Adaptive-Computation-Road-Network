@@ -15,6 +15,10 @@ public class TreeNode<T> {
     private double time; // in second
     private double distance; // total distance traversed
 
+    // @TODO: remember to remove fScore and gScore from model Node
+    private double fScore = Double.MAX_VALUE;
+    private double gScore = Double.MAX_VALUE;
+
     public TreeNode(T object) {
         this.object = object;
     }
@@ -99,5 +103,21 @@ public class TreeNode<T> {
 
     public void setDistance(double distance) {
         this.distance = distance;
+    }
+
+    public double getfScore() {
+        return fScore;
+    }
+
+    public void setfScore(double fScore) {
+        this.fScore = fScore;
+    }
+
+    public double getgScore() {
+        return gScore;
+    }
+
+    public void setgScore(double gScore) {
+        this.gScore = gScore;
     }
 }

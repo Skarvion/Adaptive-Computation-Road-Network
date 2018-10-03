@@ -4,7 +4,6 @@ import javafx.application.Platform;
 import org.swinburne.model.Way;
 import org.swinburne.model.Graph;
 import org.swinburne.model.Node;
-import org.swinburne.model.Tree.Tree;
 import org.swinburne.model.Tree.TreeNode;
 import org.swinburne.util.UnitConverter;
 import org.swinburne.view.controller.MapController;
@@ -21,82 +20,82 @@ public class AStarSearch {
     private int intersectionPassed = 0;
     private final double AVERAGE_INTERSECTION_WAITING_TIME_S = 30;
 
-    private MapController mapController;
+    private MapController.SearchTask mapTask;
 
     public void computeDirection(Graph graph, Node start, Node destination) {
         HeuristicEngine.generateHeuristic(graph, destination);
 
         path = new ArrayList<>();
-        PriorityQueue<TreeNode<Node>> frontiers = new PriorityQueue<>(50, new CostComparator());
+        PriorityQueue<Node> frontiers = new PriorityQueue<Node>(50, new FScoreComparator());
 
         timeTaken = 0;
         totalDistance = 0;
         intersectionPassed = 0;
 
-        TreeNode<Node> rootNode = new TreeNode<>(start);
-        Tree<Node> tree = new Tree<>(rootNode);
+        Node rootNode = start;
+//        Tree<Node> tree = new Tree<Node>(rootNode);
 
-        rootNode.setCost(start.getFValue());
+        int run = 0;
+
         frontiers.add(rootNode);
 
         ArrayList<Node> visited = new ArrayList<>();
 
-        int index = 0;
+        rootNode.setGCost(0);
+        rootNode.setFValue(UnitConverter.geopositionDistance(rootNode.getLatitude(), rootNode.getLongitude(), destination.getLatitude(), destination.getLongitude()));
 
-        TreeNode<Node> selectedNode;
+        Node selectedNode;
         while ((selectedNode = frontiers.poll()) != null) {
-            if (selectedNode.getObject() == destination) {
+            if (selectedNode == destination) {
                 deriveSolution(selectedNode);
                 return;
             }
+            visited.add(selectedNode);
 
-            boolean test = false;
-            if (selectedNode.getObject().getId().equalsIgnoreCase("1877118943")) test = true;
-            int waycount = 0;
-            for (Way w : selectedNode.getObject().getWayArrayList()) {
-                waycount++;
-//                if (waycount >= 2) System.out.println("Node ID " +  selectedNode.getObject().getId() + ", Way count: " + waycount);
-                if (test) {
-                    System.out.println("Ways: " + w.getId());
-                }
+            for (Way w : selectedNode.getWayArrayList()) {
 
-
-                Node[] adjacentNodes = w.getAdjacents(selectedNode.getObject());
+                Node[] adjacentNodes = w.getAdjacents(selectedNode);
                 if (adjacentNodes == null) {
-//                    System.out.println("Node ID " + selectedNode.getObject().getId() + " dead-end");
                     continue;
                 }
-
-                double speedLimitS = UnitConverter.kmhToMs(w.getSpeedLimitKmh());
+//                double speedLimitS = UnitConverter.kmhToMs(w.getSpeedLimitKmh());
                 for (Node n : adjacentNodes) {
-                    System.out.println(n.getId());
                     if (visited.contains(n)) continue;
 
-                    visited.add(n);
-                    boolean intersection = false;
-                    TreeNode<Node> treeNode = new TreeNode<>(n);
-                    selectedNode.addChild(treeNode);
+                    double totalGScore = selectedNode.getGCost() + UnitConverter.geopositionDistance(selectedNode.getLatitude(), selectedNode.getLongitude(), n.getLatitude(), n.getLongitude());
 
-                    double distance = UnitConverter.geopositionDistance(selectedNode.getObject().getLatitude(), selectedNode.getObject().getLongitude(), n.getLatitude(), n.getLongitude());
+                    if (!frontiers.contains(n))
+                        frontiers.add(n);
+                    else if (totalGScore >= n.getGCost()) continue;
 
-                    double timeS = distance / speedLimitS;
-                    if (treeNode.getObject().getWayArrayList().size() > 1) {
-                        intersection = true;
-                        intersectionPassed++;
-                    }
+                    n.setParent(selectedNode);
+                    selectedNode.addChild(n);
 
-                    treeNode.setTime(selectedNode.getTime() + timeS + (intersection ? 30 : 0));
-                    treeNode.setDistance(selectedNode.getDistance() + distance);
-                    treeNode.setCost(selectedNode.getCost() + distance + n.getFValue());
+                    double distanceToGoal = UnitConverter.geopositionDistance(n.getLatitude(), n.getLongitude(), destination.getLatitude(), destination.getLongitude());
+
+                    n.setGCost(totalGScore);
+                    n.setFValue(n.getGCost() + distanceToGoal);
+
+                    System.out.println("Run #" + run);
+                    run++;
+
+//                    if (treeNode.getObject().getWayArrayList().size() > 1) {
+//                        intersection = true;
+//                        intersectionPassed++;
+//                    }
+
+//                    treeNode.setTime(selectedNode.getTime() + timeS + (intersection ? 30 : 0));
+//                    treeNode.setDistance(selectedNode.getDistance() + distance);
+//                    treeNode.setCost(selectedNode.getCost() + distance + n.getFValue());
 
 //                    treeNode.putMetaData("time", calculateTravelTime(w, selectedNode.getMetaData("time")) + (intersection ? 30 : 0));
 
-                    if (mapController != null) {
-                        Node tn = selectedNode.getObject();
-                        Platform.runLater(() -> mapController.drawFrontier(tn, n));
-                    }
 
-                    frontiers.add(treeNode);
+
+                    if (mapTask != null) {
+                        Node tn = selectedNode;
+                        mapTask.drawFrontier(tn, n);
+                    }
                 }
             }
         }
@@ -121,14 +120,14 @@ public class AStarSearch {
         return false;
     }
 
-    private ArrayList<Node> deriveSolution(TreeNode<Node> destination) {
+    private ArrayList<Node> deriveSolution(Node destination) {
         ArrayList<Node> result = new ArrayList<>();
 
-        TreeNode<Node> selectedTreeNode = destination;
-        totalDistance = destination.getDistance();
-        timeTaken = destination.getTime();
+        Node selectedTreeNode = destination;
+//        totalDistance = destination.getDistance();
+//        timeTaken = destination.getTime();
         while (selectedTreeNode != null) {
-            result.add(selectedTreeNode.getObject());
+            result.add(selectedTreeNode);
             selectedTreeNode = selectedTreeNode.getParent();
         }
         Collections.reverse(result);
@@ -153,8 +152,8 @@ public class AStarSearch {
         return intersectionPassed;
     }
 
-    public void setMapController(MapController mapController) {
-        this.mapController = mapController;
+    public void setMapController(MapController.SearchTask mapTask) {
+        this.mapTask = mapTask;
     }
 
 }
