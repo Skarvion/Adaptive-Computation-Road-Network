@@ -74,7 +74,7 @@ public class TrafficSignalCSVParser {
         // The closest distance that is written here is the maximum threshold distance in meters
         double closestDistance = 10;
 
-        for (Node n : graph.getNodeList()) {
+        for (Node n : graph.getNodeMap().values()) {
             double calculatedDistance = UnitConverter.geopositionDistance(n.getLatitude(), n.getLongitude(), lat, lon);
             if (calculatedDistance < closestDistance) {
                 closestDistance = calculatedDistance;

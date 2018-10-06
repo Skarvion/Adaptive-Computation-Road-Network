@@ -38,8 +38,8 @@ public class GraphParser {
                 JSONObject jsonObj = (JSONObject) obj;
                 Way way = new Way();
 
-                Node source = result.findNodeByID(jsonObj.getString("source"));
-                Node destination = result.findNodeByID(jsonObj.getString("destination"));
+                Node source = result.getNode(jsonObj.getString("source"));
+                Node destination = result.getNode(jsonObj.getString("destination"));
 
                 way.addNode(source);
                 way.addNode(destination);
@@ -79,7 +79,7 @@ public class GraphParser {
 
         JSONArray nodeArray = new JSONArray();
 
-        for (Node n : graph.getNodeList()) {
+        for (Node n : graph.getNodeMap().values()) {
             JSONObject nodeJSON = new JSONObject();
             nodeJSON.put("id", n.getId());
             nodeJSON.put("label", n.getLabel());
@@ -91,7 +91,7 @@ public class GraphParser {
         ArrayList<Way> foundWay = new ArrayList<>();
         // Questioning the optimization on this
         JSONArray edgeArray = new JSONArray();
-        for (Node n : graph.getNodeList()) {
+        for (Node n : graph.getNodeMap().values()) {
 
 //            for (Way e : n.getOutEdge()) {
 //                if (!foundWay.contains(e)) {

@@ -2,7 +2,6 @@ package org.swinburne.engine.Parser;
 
 import org.swinburne.model.Graph;
 import org.swinburne.model.Node;
-import org.swinburne.model.NodeType;
 import org.swinburne.model.Way;
 import org.swinburne.util.UnitConverter;
 
@@ -77,7 +76,7 @@ public class MapTrafficSignalCSVParser {
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
-            for (Node n : graph.getNodeList()) {
+            for (Node n : graph.getNodeMap().values()) {
                 String[] streetList = getStreetList(n);
                 for (String s : streetList) {
                     boolean streetExist = false;
@@ -126,7 +125,7 @@ public class MapTrafficSignalCSVParser {
     }
 
     private static void sortWayPoint(Graph graph) {
-        for (Way w : graph.getWayList()) {
+        for (Way w : graph.getWayMap().values()) {
             if (w.getNodeOrderedList().size() == 0) continue;
             System.out.println("ORIGINAL SIZE: " + w.getNodeOrderedList().size());
             int original = w.getNodeOrderedList().size();
@@ -229,7 +228,7 @@ public class MapTrafficSignalCSVParser {
         Node closestNode = null;
         double closestDistance = Double.MAX_VALUE;
 
-        for (Node n : graph.getNodeList()) {
+        for (Node n : graph.getNodeMap().values()) {
             if (n == selectedNode) continue;
 
             if (containStreet(n, street)) {
@@ -274,7 +273,7 @@ public class MapTrafficSignalCSVParser {
         // The closest distance that is written here is the maximum threshold distance in meters
         double closestDistance = 10;
 
-        for (Node n : graph.getNodeList()) {
+        for (Node n : graph.getNodeMap().values()) {
             double calculatedDistance = UnitConverter.geopositionDistance(n.getLatitude(), n.getLongitude(), lat, lon);
             if (calculatedDistance < closestDistance) {
                 closestDistance = calculatedDistance;

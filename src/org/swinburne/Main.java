@@ -28,12 +28,12 @@ public class Main extends Application {
 
 
 //        Graph graph = GraphParser.generateGraph("hawthorn.json");
-//        for (Node n : graph.getNodeList()) {
+//        for (Node n : graph.getNodeMap()) {
 //            System.out.println("Found " + n.getId());
 //        }
 //
-//        Node startingNode = graph.findNodeByID("A");
-//        Node finishNode = graph.findNodeByID("G");
+//        Node startingNode = graph.getNode("A");
+//        Node finishNode = graph.getNode("G");
 //        System.out.println("Starting from " + startingNode.getLabel());
 //        System.out.println("Ending in " + finishNode.getLabel());
 //

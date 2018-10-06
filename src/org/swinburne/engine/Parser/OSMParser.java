@@ -17,6 +17,11 @@ import java.util.Map;
 
 public class OSMParser {
 
+    private double topLatitude;
+    private double bottomLatitude;
+    private double leftLongitude;
+    private double rightLongitude;
+
     public static Graph parseFromOSM(File file) {
         return parse(file, null, null, null, null);
     }
@@ -77,13 +82,12 @@ public class OSMParser {
                     way.setId(element.getAttribute("id"));
 
                     NodeList wayNodeList = element.getElementsByTagName("nd");
-//                    System.out.println("Way : " + way.getId());
                     for (int j = 0; j < wayNodeList.getLength(); j++) {
                         org.w3c.dom.Node selectedNodeInWay = wayNodeList.item(j);
 
                         if (selectedNodeInWay.getNodeType() == org.w3c.dom.Node.ELEMENT_NODE) {
                             Element nodeElement = (Element) selectedNodeInWay;
-                            Node foundNode = graph.findNodeByID(nodeElement.getAttribute("ref"));
+                            Node foundNode = graph.getNode(nodeElement.getAttribute("ref"));
                             if (foundNode != null) {
                                 way.addNode(foundNode);
                             }
@@ -120,5 +124,6 @@ public class OSMParser {
 
         return tagMap;
     }
+
 
 }

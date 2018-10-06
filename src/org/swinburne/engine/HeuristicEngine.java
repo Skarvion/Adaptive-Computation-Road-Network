@@ -20,7 +20,7 @@ public class HeuristicEngine {
     }
 
     public static void generateHeuristic(Graph graph, Node destination) {
-        for (Node n : graph.getNodeList()) {
+        for (Node n : graph.getNodeMap().values()) {
             if (n == destination) continue;
             calculateHeuristic(graph, n, destination);
         }

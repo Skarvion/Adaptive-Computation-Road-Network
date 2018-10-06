@@ -2,16 +2,16 @@ package org.swinburne.model;
 
 import org.swinburne.util.RandomStringGenerator;
 
-import java.util.ArrayList;
+import java.util.*;
 
 public class Graph {
-    private ArrayList<Node> nodeList = new ArrayList<>();
+    private Map<String, Node> nodeMap = new HashMap<>();
 
-    private ArrayList<Way> wayList = new ArrayList<>();
+    private Map<String, Way> wayMap = new HashMap<>();
 
     public boolean addNode(Node node) {
         if (node.getId() != null) {
-            if (findNodeByID(node.getId()) != null) {
+            if (getNode(node.getId()) != null) {
                 return false;
             }
         } else {
@@ -20,41 +20,35 @@ public class Graph {
             do {
                 found = false;
                 generatedKey = RandomStringGenerator.generateRandomString(20);
-                if (findNodeByID(generatedKey) != null) found = true;
+                if (getNode(generatedKey) != null) found = true;
             } while (found);
 
             node.setId(generatedKey);
         }
-        nodeList.add(node);
+        nodeMap.put(node.getId(), node);
 
         return true;
     }
 
-    public Node findNodeByID(String id) {
-        for (Node n : nodeList) {
-            if (n.getId().equals(id)) return n;
-        }
-        return null;
+    public Node getNode(String id) {
+        return nodeMap.get(id);
     }
 
-    public Way findWayById(String id) {
-        for (Way w : wayList) {
-            if (w.getId().equals(id)) return w;
-        }
-        return null;
+    public Way getWay(String id) {
+        return wayMap.get(id);
     }
 
-    public ArrayList<Node> getNodeList() {
-        return nodeList;
+    public Map<String, Node> getNodeMap() {
+        return nodeMap;
     }
 
-    public ArrayList<Way> getWayList() {
-        return wayList;
+    public Map<String, Way> getWayMap() {
+        return wayMap;
     }
 
     public boolean addWay(Way way) {
         if (way.getId() != null) {
-            if (findNodeByID(way.getId()) != null) {
+            if (getNode(way.getId()) != null) {
                 return false;
             }
         } else {
@@ -63,12 +57,12 @@ public class Graph {
             do {
                 found = false;
                 generatedKey = RandomStringGenerator.generateRandomString(20);
-                if (findWayById(generatedKey) != null) found = true;
+                if (getWay(generatedKey) != null) found = true;
             } while (found);
 
             way.setId(generatedKey);
         }
-        wayList.add(way);
+        wayMap.put(way.getId(), way);
 
         return true;
     }

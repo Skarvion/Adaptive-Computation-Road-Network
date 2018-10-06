@@ -79,6 +79,8 @@ public class MapController implements Initializable {
     private NodeSelectionState state = NodeSelectionState.None;
 
     private float zoomFactor = 1;
+    private double initialPaneWidth;
+    private double initialPaneHeight;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -112,6 +114,8 @@ public class MapController implements Initializable {
                 else state = NodeSelectionState.Finish;
             });
 
+            initialPaneWidth = drawPane.getPrefWidth();
+            initialPaneHeight = drawPane.getPrefHeight();
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
@@ -120,7 +124,6 @@ public class MapController implements Initializable {
     @FXML
     private void reload(ActionEvent event) {
 //        graph = OSMParser.parseFromOSM(new File("Hawthorn.osm"), -37.812234, 145.03, -37.816760, 145.041875);
-//        graph = OSMParser.parseFromOSM(new File("Hawthorn.osm"));
 //        graph = TrafficSignalCSVParser.setTrafficIntersection(graph, "Traffic-Signal.csv");
 
         graph = MapTrafficSignalCSVParser.parseFromTrafficSignal("Traffic-Signal.csv", -37.802190, 144.939755, -37.819231, 144.979215);
@@ -141,23 +144,32 @@ public class MapController implements Initializable {
 
         ArrayList<Node> searchPath = new ArrayList<>();
         new Thread(new SearchTask(searchPath)).start();
-
-//        for (MapNode mn : graphNodeMap.values()) {
-//            mn.getNode().setLabel(mn.getNode().getFValue());
-//        }
     }
 
     @FXML
     void zoomIn(ActionEvent event) {
-        float newZoomFactor = zoomFactor + 0.5f;
+        zoomFactor += 0.5f;
+
+        drawPane.setPrefWidth(initialPaneWidth * zoomFactor);
+        drawPane.setPrefHeight(initialPaneHeight * zoomFactor);
 
         for (MapNode mn : graphNodeMap.values()) {
-            mn.setLayoutX(mn.getLayoutX() * newZoomFactor / zoomFactor);
-            mn.setLayoutY(mn.getLayoutY() * newZoomFactor / zoomFactor);
+            mn.zoomPos(zoomFactor);
         }
 
-        drawPane.setPrefWidth(drawPane.getPrefWidth() * newZoomFactor / zoomFactor);
-        drawPane.setPrefHeight(drawPane.getPrefHeight() * newZoomFactor / zoomFactor);
+        redrawEdges();
+    }
+
+    @FXML
+    void zoomOut(ActionEvent event) {
+        zoomFactor -= 0.5f;
+
+        drawPane.setPrefWidth(initialPaneWidth * zoomFactor);
+        drawPane.setPrefHeight(initialPaneHeight * zoomFactor);
+
+        for (MapNode mn : graphNodeMap.values()) {
+            mn.zoomPos(zoomFactor);
+        }
 
         redrawEdges();
     }
@@ -168,25 +180,10 @@ public class MapController implements Initializable {
         }
         graphEdgeObservableList.clear();
 
-        for (Way w : graph.getWayList()) {
+        for (Way w : graph.getWayMap().values()) {
             MapEdge mapEdge = new MapEdge(w);
             graphEdgeObservableList.add(mapEdge);
         }
-    }
-
-    @FXML
-    void zoomOut(ActionEvent event) {
-        float newZoomFactor = zoomFactor - 0.5f;
-
-        for (MapNode mn : graphNodeMap.values()) {
-            mn.setLayoutX(mn.getLayoutX() * newZoomFactor / zoomFactor);
-            mn.setLayoutY(mn.getLayoutY() * newZoomFactor / zoomFactor);
-        }
-
-        drawPane.setPrefWidth(drawPane.getPrefWidth() * newZoomFactor / zoomFactor);
-        drawPane.setPrefHeight(drawPane.getPrefHeight() * newZoomFactor / zoomFactor);
-
-        redrawEdges();
     }
 
     private void drawGraph() {
@@ -202,7 +199,7 @@ public class MapController implements Initializable {
         graphNodeMap.clear();
         graphEdgeObservableList.clear();
 
-        if (graph.getNodeList().isEmpty()) return;
+        if (graph.getNodeMap().isEmpty()) return;
 
         System.out.println("==============");
         System.out.println("Rendering graph...");
@@ -213,14 +210,12 @@ public class MapController implements Initializable {
 
         double topLat, botLat, leftLon, rightLon = 0;
 
-        Node firstNode = graph.getNodeList().get(0);
+        topLat = -Double.MAX_VALUE;
+        botLat = Double.MAX_VALUE;
+        leftLon = Double.MAX_VALUE;
+        rightLon = -Double.MAX_VALUE;
 
-        topLat = firstNode.getLatitude();
-        botLat = firstNode.getLatitude();
-        leftLon = firstNode.getLongitude();
-        rightLon = firstNode.getLongitude();
-
-        for (Node n : graph.getNodeList()) {
+        for (Node n : graph.getNodeMap().values()) {
             if (n.getLatitude() > topLat) topLat = n.getLatitude();
             if (n.getLatitude() < botLat) botLat = n.getLatitude();
             if (n.getLongitude() > rightLon) rightLon = n.getLongitude();
@@ -232,7 +227,7 @@ public class MapController implements Initializable {
         double graphWidth = Math.abs(rightLon - leftLon);
         double graphHeight = Math.abs(topLat - botLat);
 
-        for (Node n : graph.getNodeList()) {
+        for (Node n : graph.getNodeMap().values()) {
             double relY = Math.abs(topLat - n.getLatitude());
             double relX = Math.abs(leftLon - n.getLongitude());
 
@@ -240,17 +235,15 @@ public class MapController implements Initializable {
             double convertedY = ((relY * paneHeight / graphHeight) * zoomFactor) + PANE_OFFSET;
 
             MapNode temp = new MapNode(n, convertedX, convertedY);
-            drawPane.getChildren().add(temp);
             graphNodeMap.put(n, temp);
         }
 
         System.out.println("Node finished...");
         System.out.println("Edge rendering\nStart" + sdf.format(new Date()));
 
-        for (Way w : graph.getWayList()) {
-            MapEdge mapEdge = new MapEdge(w);
-            graphEdgeObservableList.add(mapEdge);
-        }
+        Platform.runLater(() -> {
+            redrawEdges();
+        });
 
         System.out.println("Rendering complete...\nEnd: " + sdf.format(new Date()));
     }
@@ -320,6 +313,9 @@ public class MapController implements Initializable {
         private Line line;
         private Label label;
 
+        private double initialPosX;
+        private double initialPosY;
+
         private final double RADIUS = 2;
 
         public MapNode(Node node, double x, double y) {
@@ -328,11 +324,11 @@ public class MapController implements Initializable {
             circle.setFill(Color.YELLOW);
             circle.setStroke(Color.BLACK);
             getChildren().add(circle);
-            setLayoutX(x);
-            setLayoutY(y);
             this.node = node;
 
             label = new Label(node.getLabel());
+            label.setLayoutX(0);
+            label.setLayoutY(0);
             getChildren().add(label);
 
             if (node.getType() == NodeType.Intersection) {
@@ -347,15 +343,20 @@ public class MapController implements Initializable {
                 getChildren().add(line);
             }
 
-            if (node.getId().equalsIgnoreCase("3837155828")) {
-                circle.setFill(Color.RED);
-                circle.setRadius(RADIUS + 5);
-            }
+            circle.setLayoutX(label.getBoundsInLocal().getWidth() / 2);
+            circle.setLayoutY(0);
+            drawPane.getChildren().add(this);
 
-            setLayoutX(getLayoutX() + (label.getBoundsInLocal().getWidth() / 2));
-//            setLayoutX(getLayoutX() + 20);
-            setLayoutY(getLayoutY());
+            Platform.runLater(() -> {
+                setLayoutX(x - (label.getWidth() / 2));
+                setLayoutY(y);
+
+                initialPosX = getPosX();
+                initialPosY = getPosY();
+            });
         }
+
+        public void setText(String text) { label.setText(text); }
 
         public void redraw() {
             label.setText(node.getLabel());
@@ -363,13 +364,13 @@ public class MapController implements Initializable {
 
         // This is because cannot override getLayoutX()
         public double getPosX() {
-//            return getLayoutX() + RADIUS;
-            return getLayoutX() + (label.getBoundsInLocal().getWidth() / 2);
+            return getLayoutX() + (label.getWidth() / 2);
         }
 
         public double getPosY() {
-            return getLayoutY() + RADIUS;
+            return getLayoutY() + (getHeight() / 2);
         }
+
 
         public Node getNode() {
             return node;
@@ -382,6 +383,14 @@ public class MapController implements Initializable {
         @Override
         public String toString() {
             return node.getLabel();
+        }
+
+        public void zoomPos(float newZoomFactor) {
+//            setLayoutX(getLayoutX() * newZoomFactor);
+//            setLayoutY(getLayoutY() * newZoomFactor);
+
+            setLayoutX((initialPosX * newZoomFactor) - (label.getWidth() / 2));
+            setLayoutY((initialPosY * newZoomFactor) - (getHeight() / 2));
         }
     }
 
@@ -408,8 +417,8 @@ public class MapController implements Initializable {
                     break;
                 }
 
-                Line line = new Line();
 
+                Line line = new Line();
                 line.setStartX(getMapNode(way.getNodeOrderedList().get(i - 1)).getPosX());
                 line.setStartY(getMapNode(way.getNodeOrderedList().get(i - 1)).getPosY());
 
@@ -521,10 +530,11 @@ public class MapController implements Initializable {
 
         public void drawFrontier(Node source, Node destination) {
             try {
-                Thread.sleep(100);
+                Thread.sleep(300);
                 Platform.runLater(() -> {
                     MapNode sourceMapNode = graphNodeMap.get(source);
                     MapNode destinationMapNode = graphNodeMap.get(destination);
+                    destinationMapNode.setText(Double.toString(destination.getFValue()));
 
                     if (sourceMapNode == null || destinationMapNode == null) return;
 
