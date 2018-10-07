@@ -13,7 +13,7 @@ public class FScoreComparator implements Comparator<Node> {
         double h2 = o2.getFValue();
 
         if (h1 > h2) return 1;
-        else if (h1 == h2) return 0;
+        else if (h1 == h2) return -1;
         else return -1;
     }
 }

@@ -35,14 +35,12 @@ public class AStarSearch {
         Node rootNode = start;
 //        Tree<Node> tree = new Tree<Node>(rootNode);
 
-        int run = 0;
-
-        frontiers.add(rootNode);
-
         ArrayList<Node> visited = new ArrayList<>();
 
         rootNode.setGCost(0);
         rootNode.setFValue(UnitConverter.geopositionDistance(rootNode.getLatitude(), rootNode.getLongitude(), destination.getLatitude(), destination.getLongitude()));
+
+        frontiers.add(rootNode);
 
         Node selectedNode;
         while ((selectedNode = frontiers.poll()) != null) {
@@ -64,8 +62,8 @@ public class AStarSearch {
 
                     double totalGScore = selectedNode.getGCost() + UnitConverter.geopositionDistance(selectedNode.getLatitude(), selectedNode.getLongitude(), n.getLatitude(), n.getLongitude());
 
-                    if (!frontiers.contains(n))
-                        frontiers.add(n);
+                    boolean contained = true;
+                    if (!frontiers.contains(n)) contained = false;
                     else if (totalGScore >= n.getGCost()) continue;
 
                     n.setParent(selectedNode);
@@ -76,8 +74,8 @@ public class AStarSearch {
                     n.setGCost(totalGScore);
                     n.setFValue(n.getGCost() + distanceToGoal);
 
-                    System.out.println("Run #" + run);
-                    run++;
+                    if (!contained)
+                        frontiers.add(n);
 
 //                    if (treeNode.getObject().getWayArrayList().size() > 1) {
 //                        intersection = true;

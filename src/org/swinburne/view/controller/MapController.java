@@ -20,11 +20,15 @@ import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
 import org.swinburne.engine.AStarSearch;
 import org.swinburne.engine.Parser.MapTrafficSignalCSVParser;
+import org.swinburne.engine.Parser.OSMParser;
+import org.swinburne.engine.Parser.TrafficSignalCSVParser;
 import org.swinburne.model.Graph;
 import org.swinburne.model.Node;
 import org.swinburne.model.NodeType;
 import org.swinburne.model.Way;
+import org.swinburne.util.UnitConverter;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.net.URL;
@@ -124,9 +128,10 @@ public class MapController implements Initializable {
     @FXML
     private void reload(ActionEvent event) {
 //        graph = OSMParser.parseFromOSM(new File("Hawthorn.osm"), -37.812234, 145.03, -37.816760, 145.041875);
-//        graph = TrafficSignalCSVParser.setTrafficIntersection(graph, "Traffic-Signal.csv");
-
-        graph = MapTrafficSignalCSVParser.parseFromTrafficSignal("Traffic-Signal.csv", -37.802190, 144.939755, -37.819231, 144.979215);
+        graph = OSMParser.parseFromOSM(new File("Hawthorn.osm"));
+        graph = TrafficSignalCSVParser.setTrafficIntersection(graph, "Traffic-Signal.csv");
+//
+//        graph = MapTrafficSignalCSVParser.parseFromTrafficSignal("Traffic-Signal.csv", -37.802190, 144.939755, -37.819231, 144.979215);
         drawGraph();
     }
 
@@ -399,24 +404,28 @@ public class MapController implements Initializable {
         private Way way;
 
         private ArrayList<Line> lineArrayList = new ArrayList<>();
+        private Label wayName;
 
         private final double STROKE_WIDTH = 2;
 
         public MapEdge(Way way) {
             this.way = way;
+            boolean labeled = (way.getLabel() != null);
+            if (labeled) wayName = new Label(way.getLabel());
 
             if (way.getNodeOrderedList().size() <= 1) return;
 
             MapNode origin = getMapNode(way.getNodeOrderedList().get(0));
             if (origin == null) return;
 
+            double longest = 0;
+            double streetStartX = 0, streetStartY = 0, streetEndX = 0, streetEndY = 0;
             for (int i = 1; i < way.getNodeOrderedList().size(); i++) {
-                try {
-                    MapNode start = getMapNode(way.getNodeOrderedList().get(i));
-                } catch (IndexOutOfBoundsException ioobe) {
-                    break;
-                }
-
+//                try {
+//                    MapNode start = getMapNode(way.getNodeOrderedList().get(i));
+//                } catch (IndexOutOfBoundsException ioobe) {
+//                    break;
+//                }
 
                 Line line = new Line();
                 line.setStartX(getMapNode(way.getNodeOrderedList().get(i - 1)).getPosX());
@@ -428,12 +437,28 @@ public class MapController implements Initializable {
                 line.setEndX(newX);
                 line.setEndY(newY);
 
+                if (labeled) {
+                    double distance = Math.sqrt(Math.pow(line.getStartX() - line.getEndX(), 2) + Math.pow(line.getStartY() - line.getEndY(), 2));
+                    if (distance > longest) {
+                        longest = distance;
+                        streetStartX = line.getStartX();
+                        streetStartY = line.getStartY();
+                        streetEndX = line.getEndX();
+                        streetEndY = line.getEndY();
+                    }
+                }
+
                 line.setStroke(Color.BLUE);
                 line.setStrokeWidth(STROKE_WIDTH);
 
                 drawPane.getChildren().add(line);
 
                 lineArrayList.add(line);
+            }
+
+            if (labeled) {
+                wayName.setLayoutX((streetEndX - streetStartX) / 2 - (wayName.getWidth() / 2));
+                wayName.setLayoutY((streetEndY - streetStartY) / 2 - (wayName.getHeight() / 2) - 10);
             }
         }
 
@@ -530,7 +555,7 @@ public class MapController implements Initializable {
 
         public void drawFrontier(Node source, Node destination) {
             try {
-                Thread.sleep(300);
+                Thread.sleep(500);
                 Platform.runLater(() -> {
                     MapNode sourceMapNode = graphNodeMap.get(source);
                     MapNode destinationMapNode = graphNodeMap.get(destination);

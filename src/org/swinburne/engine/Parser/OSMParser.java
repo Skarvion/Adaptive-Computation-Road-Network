@@ -64,6 +64,7 @@ public class OSMParser {
 
                     Node newNode = new Node();
                     newNode.setId(element.getAttribute("id"));
+                    newNode.setLabel(newNode.getId());
                     newNode.setLatitude(lat);
                     newNode.setLongitude(lon);
 
