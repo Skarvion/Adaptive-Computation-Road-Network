@@ -60,7 +60,15 @@ public class OSMParser {
                     if (bounded)
                         if (lat > top || lat < bottom || lon < left || lon > right) continue;
 
-                    NodeList tagList = element.getElementsByTagName("tag");
+                    Map<String, String> tagMap = getTagList(element);
+                    if (tagMap.get("building") != null || tagMap.get("playground") != null || tagMap.get("leisure") != null || tagMap.get("amenity") != null || tagMap.get("power") != null || tagMap.get("shop") != null)
+                        continue;
+
+                    String network = tagMap.get("network");
+                    if (network != null) {
+                        if (network.contains("PTV")) continue;
+                    } else if (tagMap.get("railway") != null) continue;
+
 
                     Node newNode = new Node();
                     newNode.setId(element.getAttribute("id"));
@@ -78,6 +86,23 @@ public class OSMParser {
 
                 if (selectednode.getNodeType() == org.w3c.dom.Node.ELEMENT_NODE) {
                     Element element = (Element) selectednode;
+
+                    Map<String, String> tagMap = getTagList(element);
+
+                    if (tagMap.get("cables") != null || tagMap.get("power") != null || tagMap.get("wires") != null)
+                        continue;
+                    String network = tagMap.get("network");
+                    String railway = tagMap.get("railway");
+                    if (network != null) {
+                        if (network.contains("PTV")) continue;
+                    } else if (railway != null) continue;
+
+                    if (tagMap.get("leisure") != null || tagMap.get("building") != null || tagMap.get("office") != null) continue;
+                    if (tagMap.get("amenity") != null || tagMap.get("foot") != null || tagMap.get("bicycle") != null || tagMap.get("landuse") != null) continue;
+
+                    if (tagMap.get("highway") != null) {
+                        if (tagMap.get("highway").equalsIgnoreCase("path") || tagMap.get("highway").equalsIgnoreCase("footway")) continue;
+                    }
 
                     Way way = new Way();
                     way.setId(element.getAttribute("id"));
@@ -110,7 +135,7 @@ public class OSMParser {
         return graph;
     }
 
-    private Map<String, String> getTagList(Element element) {
+    private static Map<String, String> getTagList(Element element) {
         Map<String, String> tagMap = new HashMap<>();
         NodeList tagList = element.getElementsByTagName("tag");
 

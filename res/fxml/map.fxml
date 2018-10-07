@@ -16,7 +16,7 @@
 
 <HBox xmlns="http://javafx.com/javafx/9.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.swinburne.view.controller.MapController">
    <children>
-      <ScrollPane maxHeight="900.0" maxWidth="900.0" HBox.hgrow="NEVER">
+      <ScrollPane fx:id="scrollPane" maxHeight="900.0" maxWidth="900.0" HBox.hgrow="NEVER">
          <content>
             <AnchorPane fx:id="drawPane" onMouseClicked="#mapClick" prefHeight="850.0" prefWidth="850.0" style="-fx-background-color: white;">
 

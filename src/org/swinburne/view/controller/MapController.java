@@ -40,6 +40,9 @@ import java.util.ResourceBundle;
 public class MapController implements Initializable {
 
     @FXML
+    private ScrollPane scrollPane;
+
+    @FXML
     private AnchorPane drawPane;
 
     @FXML
@@ -128,7 +131,7 @@ public class MapController implements Initializable {
     @FXML
     private void reload(ActionEvent event) {
 //        graph = OSMParser.parseFromOSM(new File("Hawthorn.osm"), -37.812234, 145.03, -37.816760, 145.041875);
-        graph = OSMParser.parseFromOSM(new File("Hawthorn.osm"));
+        graph = OSMParser.parseFromOSM(new File("Hawthorn.osm"), -37.811323, 145.022338, -37.825929, 145.046812);
         graph = TrafficSignalCSVParser.setTrafficIntersection(graph, "Traffic-Signal.csv");
 //
 //        graph = MapTrafficSignalCSVParser.parseFromTrafficSignal("Traffic-Signal.csv", -37.802190, 144.939755, -37.819231, 144.979215);
@@ -147,16 +150,20 @@ public class MapController implements Initializable {
         drawPane.getChildren().removeAll(solutionObservableList);
         solutionObservableList.clear();
 
+        scrollPane.setHvalue(scrollPane.getHvalue() / 2);
+        scrollPane.setVvalue(scrollPane.getVvalue() / 2);
+
         ArrayList<Node> searchPath = new ArrayList<>();
         new Thread(new SearchTask(searchPath)).start();
     }
 
     @FXML
     void zoomIn(ActionEvent event) {
-        zoomFactor += 0.5f;
+        zoomFactor += 1;
 
         drawPane.setPrefWidth(initialPaneWidth * zoomFactor);
         drawPane.setPrefHeight(initialPaneHeight * zoomFactor);
+
 
         for (MapNode mn : graphNodeMap.values()) {
             mn.zoomPos(zoomFactor);
@@ -167,7 +174,7 @@ public class MapController implements Initializable {
 
     @FXML
     void zoomOut(ActionEvent event) {
-        zoomFactor -= 0.5f;
+        zoomFactor -= 1;
 
         drawPane.setPrefWidth(initialPaneWidth * zoomFactor);
         drawPane.setPrefHeight(initialPaneHeight * zoomFactor);
@@ -233,6 +240,8 @@ public class MapController implements Initializable {
         double graphHeight = Math.abs(topLat - botLat);
 
         for (Node n : graph.getNodeMap().values()) {
+            if (n.getWayArrayList().size() == 0) continue;
+
             double relY = Math.abs(topLat - n.getLatitude());
             double relX = Math.abs(leftLon - n.getLongitude());
 
@@ -554,8 +563,8 @@ public class MapController implements Initializable {
         }
 
         public void drawFrontier(Node source, Node destination) {
-            try {
-                Thread.sleep(500);
+//            try {
+//                Thread.sleep(500);
                 Platform.runLater(() -> {
                     MapNode sourceMapNode = graphNodeMap.get(source);
                     MapNode destinationMapNode = graphNodeMap.get(destination);
@@ -577,9 +586,9 @@ public class MapController implements Initializable {
                     drawPane.getChildren().add(line);
                     solutionObservableList.add(line);
                 });
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+//            } catch (InterruptedException e) {
+//                e.printStackTrace();
+//            }
         }
     }
 }
