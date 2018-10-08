@@ -133,7 +133,7 @@ public class MapController implements Initializable {
 //        graph = OSMParser.parseFromOSM(new File("Hawthorn.osm"), -37.812234, 145.03, -37.816760, 145.041875);
         graph = OSMParser.parseFromOSM(new File("Hawthorn.osm"), -37.811323, 145.022338, -37.825929, 145.046812);
         graph = TrafficSignalCSVParser.setTrafficIntersection(graph, "Traffic-Signal.csv");
-//
+
 //        graph = MapTrafficSignalCSVParser.parseFromTrafficSignal("Traffic-Signal.csv", -37.802190, 144.939755, -37.819231, 144.979215);
         drawGraph();
     }
@@ -468,6 +468,7 @@ public class MapController implements Initializable {
             if (labeled) {
                 wayName.setLayoutX((streetEndX - streetStartX) / 2 - (wayName.getWidth() / 2));
                 wayName.setLayoutY((streetEndY - streetStartY) / 2 - (wayName.getHeight() / 2) - 10);
+                drawPane.getChildren().add(wayName);
             }
         }
 

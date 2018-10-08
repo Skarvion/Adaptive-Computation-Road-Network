@@ -16,12 +16,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class OSMParser {
-
-    private double topLatitude;
-    private double bottomLatitude;
-    private double leftLongitude;
-    private double rightLongitude;
-
     public static Graph parseFromOSM(File file) {
         return parse(file, null, null, null, null);
     }
@@ -72,7 +66,7 @@ public class OSMParser {
 
                     Node newNode = new Node();
                     newNode.setId(element.getAttribute("id"));
-                    newNode.setLabel(newNode.getId());
+//                    if (tagMap.get("name") != null) newNode.setLabel(tagMap.get("name"));
                     newNode.setLatitude(lat);
                     newNode.setLongitude(lon);
 
@@ -106,6 +100,8 @@ public class OSMParser {
 
                     Way way = new Way();
                     way.setId(element.getAttribute("id"));
+                    if (tagMap.get("maxspeed") != null) way.setSpeedLimitKmh(Float.parseFloat(tagMap.get("maxspeed")));
+                    else way.setSpeedLimitKmh(50); // Default speed reference: https://en.wikipedia.org/wiki/Speed_limits_in_Australia
 
                     NodeList wayNodeList = element.getElementsByTagName("nd");
                     for (int j = 0; j < wayNodeList.getLength(); j++) {
@@ -150,6 +146,5 @@ public class OSMParser {
 
         return tagMap;
     }
-
 
 }

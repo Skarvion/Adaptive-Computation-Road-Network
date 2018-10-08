@@ -14,16 +14,16 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<HBox xmlns="http://javafx.com/javafx/9.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.swinburne.view.controller.MapController">
+<HBox xmlns="http://javafx.com/javafx/10.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.swinburne.view.controller.MapController">
    <children>
-      <ScrollPane fx:id="scrollPane" maxHeight="900.0" maxWidth="900.0" HBox.hgrow="NEVER">
+      <ScrollPane fx:id="scrollPane" fitToHeight="true" fitToWidth="true" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" HBox.hgrow="SOMETIMES">
          <content>
             <AnchorPane fx:id="drawPane" onMouseClicked="#mapClick" prefHeight="850.0" prefWidth="850.0" style="-fx-background-color: white;">
 
 </AnchorPane>
          </content>
       </ScrollPane>
-      <VBox maxWidth="1.7976931348623157E308">
+      <VBox maxWidth="250.0" minWidth="250.0">
          <children>
             <Button fx:id="reloadButton" mnemonicParsing="false" onAction="#reload" text="Reload" />
             <VBox prefWidth="100.0" spacing="10.0">
@@ -35,8 +35,8 @@
             </VBox>
             <GridPane>
               <columnConstraints>
-                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+                <ColumnConstraints hgrow="SOMETIMES" />
+                <ColumnConstraints hgrow="SOMETIMES" maxWidth="1.7976931348623157E308" />
               </columnConstraints>
               <rowConstraints>
                 <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
@@ -45,8 +45,8 @@
                <children>
                   <Label text="Source" />
                   <Label text="Destination" GridPane.rowIndex="1" />
-                  <ComboBox fx:id="sourceNodeComboBox" prefWidth="150.0" GridPane.columnIndex="1" />
-                  <ComboBox fx:id="destinationNodeComboBox" prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                  <ComboBox fx:id="sourceNodeComboBox" maxWidth="1.7976931348623157E308" prefWidth="150.0" GridPane.columnIndex="1" />
+                  <ComboBox fx:id="destinationNodeComboBox" maxWidth="1.7976931348623157E308" prefWidth="150.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                </children>
             </GridPane>
             <TextArea fx:id="outputTextArea" editable="false" maxWidth="1.7976931348623157E308">
