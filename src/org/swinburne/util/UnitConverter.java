@@ -1,11 +1,17 @@
 package org.swinburne.util;
 
+import org.swinburne.model.Node;
+
 public class UnitConverter {
     private static final float EARTH_RADIUS_METRE = 6371000;
 
     public static double kmhToMs(double kmh) {
         double result = kmh * 1000 / 3600;
         return result;
+    }
+
+    public static double geopositionDistance(Node a, Node b) {
+        return geopositionDistance(a.getLatitude(), a.getLongitude(), b.getLatitude(), b.getLongitude());
     }
 
     // Harvesine formula

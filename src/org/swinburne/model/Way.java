@@ -12,9 +12,12 @@ public class Way {
     // Distance measured in km
     private float distance;
     // Speed measured in km/h
-    private float speedLimit = 40; // speed limit is 40 km/h by default
+    private float speedLimit = 50; // speed limit is 40 km/h by default
     // Traffic coefficient limit 0.01 to 1
     private float traffic;
+
+    // ArrayList should be counted from top to bottom
+    private boolean oneway = false;
 
     private WayType wayType = WayType.Road;
 
@@ -23,7 +26,6 @@ public class Way {
 
     public Way() {
         this.distance = 0;
-        this.speedLimit = 0;
         this.traffic = 0;
     }
 
@@ -80,7 +82,8 @@ public class Way {
         if (pos == -1) return null;
 
         if (nodeOrderedList.size() == 1) return new Node[0];
-        else {
+
+        if (!oneway) {
             // @TODO: i know i can make this part shorter, but that's future me problem
             if (pos == 0) {
                 if (nodeOrderedList.get(0) == nodeOrderedList.get(nodeOrderedList.size() - 1)) {
@@ -108,6 +111,20 @@ public class Way {
                 Node[] result = new Node[2];
                 result[0] = nodeOrderedList.get(pos - 1);
                 result[1] = nodeOrderedList.get(pos + 1);
+                return result;
+            }
+        } else {
+            if (pos == (nodeOrderedList.size() - 1)) {
+                if (nodeOrderedList.get(0) == nodeOrderedList.get(nodeOrderedList.size() - 1)) {
+                    Node[] result = new Node[1];
+                    result[0] = nodeOrderedList.get(1);
+                    return result;
+                } else {
+                    return new Node[0];
+                }
+            } else {
+                Node[] result = new Node[1];
+                result[0] = nodeOrderedList.get(pos + 1);
                 return result;
             }
         }
@@ -167,5 +184,13 @@ public class Way {
 
     public void setWayType(WayType wayType) {
         this.wayType = wayType;
+    }
+
+    public boolean isOneway() {
+        return oneway;
+    }
+
+    public void setOneway(boolean oneway) {
+        this.oneway = oneway;
     }
 }

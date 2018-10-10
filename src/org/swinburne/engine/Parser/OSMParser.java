@@ -63,10 +63,10 @@ public class OSMParser {
                         if (network.contains("PTV")) continue;
                     } else if (tagMap.get("railway") != null) continue;
 
-
                     Node newNode = new Node();
                     newNode.setId(element.getAttribute("id"));
-//                    if (tagMap.get("name") != null) newNode.setLabel(tagMap.get("name"));
+//                    newNode.setLabel(newNode.getId());
+                    if (tagMap.get("name") != null) newNode.setLabel(tagMap.get("name"));
                     newNode.setLatitude(lat);
                     newNode.setLongitude(lon);
 
@@ -91,7 +91,7 @@ public class OSMParser {
                         if (network.contains("PTV")) continue;
                     } else if (railway != null) continue;
 
-                    if (tagMap.get("leisure") != null || tagMap.get("building") != null || tagMap.get("office") != null) continue;
+                    if (tagMap.get("leisure") != null || tagMap.get("building") != null || tagMap.get("office") != null || tagMap.get("waterway") != null) continue;
                     if (tagMap.get("amenity") != null || tagMap.get("foot") != null || tagMap.get("bicycle") != null || tagMap.get("landuse") != null) continue;
 
                     if (tagMap.get("highway") != null) {
@@ -100,6 +100,7 @@ public class OSMParser {
 
                     Way way = new Way();
                     way.setId(element.getAttribute("id"));
+                    if (tagMap.get("name") != null) way.setLabel(tagMap.get("name"));
                     if (tagMap.get("maxspeed") != null) way.setSpeedLimitKmh(Float.parseFloat(tagMap.get("maxspeed")));
                     else way.setSpeedLimitKmh(50); // Default speed reference: https://en.wikipedia.org/wiki/Speed_limits_in_Australia
 

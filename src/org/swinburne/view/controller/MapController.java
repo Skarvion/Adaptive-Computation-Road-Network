@@ -466,8 +466,8 @@ public class MapController implements Initializable {
             }
 
             if (labeled) {
-                wayName.setLayoutX((streetEndX - streetStartX) / 2 - (wayName.getWidth() / 2));
-                wayName.setLayoutY((streetEndY - streetStartY) / 2 - (wayName.getHeight() / 2) - 10);
+                wayName.setLayoutX(Math.abs(streetEndX - streetStartX) / 2 + Math.min(streetStartX, streetEndX));
+                wayName.setLayoutY(Math.abs(streetEndY - streetStartY) / 2 + Math.min(streetStartY, streetEndY));
                 drawPane.getChildren().add(wayName);
             }
         }
@@ -476,8 +476,10 @@ public class MapController implements Initializable {
             for (Line l : lineArrayList) {
                 drawPane.getChildren().remove(l);
             }
+            if (wayName != null) drawPane.getChildren().remove(wayName);
 //            drawPane.getChildren().remove(lineArrayList);
             lineArrayList.clear();
+            wayName = null;
         }
 
         private MapNode getMapNode(Node node) {
@@ -520,9 +522,12 @@ public class MapController implements Initializable {
             search.setMapController(this);
             search.computeDirection(graph, selectedStartNode.getNode(), selectedFinishNode.getNode());
 
-            ArrayList<Node> test = search.getPath();
-            resultPath = test;
-            if (resultPath.size() == 0) System.out.println("Test is null?");
+            resultPath.clear();
+            resultPath.addAll(search.getPath());
+            if (resultPath.size() == 0) {
+                System.out.println("Test is null?");
+                return null;
+            }
 
             ArrayList<MapNode> foundMapNode = new ArrayList<>();
 
@@ -557,6 +562,7 @@ public class MapController implements Initializable {
 
                     drawPane.getChildren().add(solutionLine);
                     solutionObservableList.add(solutionLine);
+
                 }
             });
 
@@ -569,7 +575,7 @@ public class MapController implements Initializable {
                 Platform.runLater(() -> {
                     MapNode sourceMapNode = graphNodeMap.get(source);
                     MapNode destinationMapNode = graphNodeMap.get(destination);
-                    destinationMapNode.setText(Double.toString(destination.getFValue()));
+//                    destinationMapNode.setText(Double.toString(destination.getFValue()));
 
                     if (sourceMapNode == null || destinationMapNode == null) return;
 
