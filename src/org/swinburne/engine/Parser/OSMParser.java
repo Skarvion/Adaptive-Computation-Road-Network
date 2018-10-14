@@ -20,7 +20,7 @@ public class OSMParser {
         return parse(file, null, null, null, null);
     }
 
-    public static Graph parseFromOSM(File file, double top, double left, double bottom, double right) {
+    public static Graph parseFromOSM(File file, Double top, Double left, Double bottom, Double right) {
         return parse(file, top, left, bottom, right);
     }
 

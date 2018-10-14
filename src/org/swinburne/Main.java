@@ -23,27 +23,5 @@ public class Main extends Application {
     public static void main(String[] args) {
 
         launch(args);
-
-//        Graph graph = OSMParser.parseFromOSM(new File("Hawthorn.osm"));
-
-
-//        Graph graph = GraphParser.generateGraph("hawthorn.json");
-//        for (Node n : graph.getNodeMap()) {
-//            System.out.println("Found " + n.getId());
-//        }
-//
-//        Node startingNode = graph.getNode("A");
-//        Node finishNode = graph.getNode("G");
-//        System.out.println("Starting from " + startingNode.getLabel());
-//        System.out.println("Ending in " + finishNode.getLabel());
-//
-//        AStarSearch search = new AStarSearch();
-//        ArrayList<Node> result = search.computeDirection(graph, startingNode, finishNode);
-//        System.out.println("\nResult:");
-//        for (Node n : result) {
-//            System.out.println(n.getLabel());
-//        }
-//
-//        GraphParser.saveGraph(graph, "Test.json");
     }
 }

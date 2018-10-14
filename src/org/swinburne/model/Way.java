@@ -84,7 +84,8 @@ public class Way {
         if (nodeOrderedList.size() == 1) return new Node[0];
 
         if (!oneway) {
-            // @TODO: i know i can make this part shorter, but that's future me problem
+            // @TODO: i know i can make this part shorter, but that's future me
+            // problem
             if (pos == 0) {
                 if (nodeOrderedList.get(0) == nodeOrderedList.get(nodeOrderedList.size() - 1)) {
                     Node[] result = new Node[2];

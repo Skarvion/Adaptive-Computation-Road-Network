@@ -92,6 +92,7 @@ public class FileController implements Initializable {
     @FXML
     void okMap(ActionEvent event) {
         Map<String, Object> result = new HashMap<>();
+        result.put("file", selectedFile);
         if (boundedRadio.isSelected()) {
             if (topLatText.getText() == null || leftLonText.getText() == null || bottomLatText.getText() == null || rightLonText.getText() == null) {
                 Alert alert = new Alert(Alert.AlertType.ERROR, "Bounded box must be filled!");
@@ -110,9 +111,6 @@ public class FileController implements Initializable {
                     result.put("rightLon", rightLon);
                     result.put("file", selectedFile);
 
-                    if (mapController != null) {
-                        mapController.loadOSMFile(result);
-                    }
 
                 } catch (NumberFormatException pe) {
                     Alert alert = new Alert(Alert.AlertType.ERROR, "Number format is incorrect!");
@@ -124,7 +122,11 @@ public class FileController implements Initializable {
         }
 
         if (mapController != null) {
+            mapController.loadOSMFile(result);
             closeDialog();
+        } else {
+            Alert alert = new Alert(Alert.AlertType.ERROR, "Map Controller is null!");
+            alert.showAndWait();
         }
     }
 
