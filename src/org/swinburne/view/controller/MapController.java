@@ -8,7 +8,10 @@ import javafx.collections.ObservableMap;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -18,6 +21,8 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 import org.swinburne.engine.AStarSearch;
 import org.swinburne.engine.Parser.MapTrafficSignalCSVParser;
 import org.swinburne.engine.Parser.OSMParser;
@@ -31,11 +36,10 @@ import org.swinburne.util.UnitConverter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.ResourceBundle;
+import java.util.*;
 
 public class MapController implements Initializable {
 
@@ -46,13 +50,10 @@ public class MapController implements Initializable {
     private AnchorPane drawPane;
 
     @FXML
-    private TextArea outputTextArea;
+    private Button openMapFileButton;
 
     @FXML
-    private Button calculateButton;
-
-    @FXML
-    private RadioButton noneRadioButton;
+    private Button reloadButton;
 
     @FXML
     private RadioButton startRadioButton;
@@ -61,10 +62,22 @@ public class MapController implements Initializable {
     private RadioButton finishRadioButton;
 
     @FXML
-    private Button zoomInButton;
+    private Button clearPinsButton;
 
     @FXML
-    private Button zoomOutButton;
+    private Button calculateButton;
+
+    @FXML
+    private TextArea outputTextArea;
+
+    @FXML
+    private TableView<PropertyEntry> propertiesTableView;
+
+    @FXML
+    private TableColumn<PropertyEntry, String> keyTableCol;
+
+    @FXML
+    private TableColumn<PropertyEntry, String> valueTableCol;
 
     private final double PANE_OFFSET = 2;
 
@@ -89,6 +102,14 @@ public class MapController implements Initializable {
     private double initialPaneWidth;
     private double initialPaneHeight;
 
+    private File mapFile;
+    private Double topLat;
+    private Double leftLon;
+    private Double botLat;
+    private Double rightLon;
+
+    private long delayMS;
+
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         try {
@@ -111,13 +132,11 @@ public class MapController implements Initializable {
             drawPane.getChildren().add(startPinView);
             drawPane.getChildren().add(finishPinView);
 
-            noneRadioButton.setToggleGroup(radioGroup);
             startRadioButton.setToggleGroup(radioGroup);
             finishRadioButton.setToggleGroup(radioGroup);
 
             radioGroup.selectedToggleProperty().addListener((observable, oldValue, newValue) -> {
-                if (newValue == noneRadioButton) state = NodeSelectionState.None;
-                else if (newValue == startRadioButton) state = NodeSelectionState.Start;
+                if (newValue == startRadioButton) state = NodeSelectionState.Start;
                 else state = NodeSelectionState.Finish;
             });
 
@@ -129,13 +148,53 @@ public class MapController implements Initializable {
     }
 
     @FXML
-    private void reload(ActionEvent event) {
-//        graph = OSMParser.parseFromOSM(new File("Hawthorn.osm"), -37.812234, 145.03, -37.816760, 145.041875);
-        graph = OSMParser.parseFromOSM(new File("Hawthorn.osm"), -37.811323, 145.022338, -37.825929, 145.046812);
-        graph = TrafficSignalCSVParser.setTrafficIntersection(graph, "Traffic-Signal.csv");
+    void clearPin(ActionEvent event) {
 
-//        graph = MapTrafficSignalCSVParser.parseFromTrafficSignal("Traffic-Signal.csv", -37.802190, 144.939755, -37.819231, 144.979215);
-        drawGraph();
+    }
+
+    public void loadOSMFile(Map<String, Object> map) {
+        topLat = (Double) map.get("topLat");
+        leftLon = (Double) map.get("leftLon");
+        botLat = (Double) map.get("botLat");
+        rightLon = (Double) map.get("rightLon");
+        mapFile = (File) map.get("file");
+
+        reload(null);
+    }
+
+    @FXML
+    void openMap(ActionEvent event) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getClassLoader().getResource("fxml/openMap.fxml"));
+
+            Parent root = loader.load();
+            FileController fileController = loader.getController();
+
+            fileController.setMapController(this);
+            Scene scene = new Scene(root, 300, 400);
+            Stage stage = new Stage();
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.initOwner(openMapFileButton.getScene().getWindow());
+            stage.setScene(scene);
+            stage.show();
+
+        } catch (IOException ioe) {
+            ioe.printStackTrace();
+        }
+    }
+
+    @FXML
+    private void reload(ActionEvent event) {
+        if (mapFile != null) {
+            graph = OSMParser.parseFromOSM(mapFile, topLat, leftLon, botLat, rightLon);
+            graph = TrafficSignalCSVParser.setTrafficIntersection(graph, "Traffic-Signal.csv");
+            drawGraph();
+        }
+        else {
+            Alert alert = new Alert(Alert.AlertType.ERROR, "Map file is not found!");
+            alert.showAndWait();
+            graph = null;
+        }
     }
 
     @FXML
@@ -570,12 +629,11 @@ public class MapController implements Initializable {
         }
 
         public void drawFrontier(Node source, Node destination) {
-//            try {
-//                Thread.sleep(500);
+            try {
+                if (delayMS > 0) Thread.sleep(delayMS);
                 Platform.runLater(() -> {
                     MapNode sourceMapNode = graphNodeMap.get(source);
                     MapNode destinationMapNode = graphNodeMap.get(destination);
-//                    destinationMapNode.setText(Double.toString(destination.getFValue()));
 
                     if (sourceMapNode == null || destinationMapNode == null) return;
 
@@ -593,9 +651,35 @@ public class MapController implements Initializable {
                     drawPane.getChildren().add(line);
                     solutionObservableList.add(line);
                 });
-//            } catch (InterruptedException e) {
-//                e.printStackTrace();
-//            }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private class PropertyEntry {
+        private String key;
+        private String value;
+
+        public PropertyEntry(String key, String value) {
+            this.key = key;
+            this.value = value;
+        }
+
+        public String getKey() {
+            return key;
+        }
+
+        public void setKey(String key) {
+            this.key = key;
+        }
+
+        public String getValue() {
+            return value;
+        }
+
+        public void setValue(String value) {
+            this.value = value;
         }
     }
 }

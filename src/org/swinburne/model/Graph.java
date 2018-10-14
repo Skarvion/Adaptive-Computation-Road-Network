@@ -2,11 +2,11 @@ package org.swinburne.model;
 
 import org.swinburne.util.RandomStringGenerator;
 
+import java.io.Serializable;
 import java.util.*;
 
-public class Graph {
+public class Graph implements Serializable {
     private Map<String, Node> nodeMap = new HashMap<>();
-
     private Map<String, Way> wayMap = new HashMap<>();
 
     public boolean addNode(Node node) {
