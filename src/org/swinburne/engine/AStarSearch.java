@@ -1,6 +1,5 @@
 package org.swinburne.engine;
 
-import javafx.application.Platform;
 import org.swinburne.model.Way;
 import org.swinburne.model.Graph;
 import org.swinburne.model.Node;
@@ -14,24 +13,40 @@ import java.util.PriorityQueue;
 
 public class AStarSearch {
     private ArrayList<Node> path = new ArrayList<>();
-    private double totalDistance;
-    private double timeTaken;
+    private boolean solutionFound = false;
 
-    private int intersectionPassed = 0;
+    private double totalDistance = 0;
+    private double timeTaken = 0;
+    private int frontierCount = 0;
+    private int visitedCount = 0;
+    private long processTimeMS = 0;
+    private double sldStartToFinish = 0;
+
+    private long startTime = 0;
+
+    private int trafficSignalPassed = 0;
     private final double AVERAGE_INTERSECTION_WAITING_TIME_S = 30;
 
     private MapController.SearchTask mapTask;
 
     public void computeDirection(Graph graph, Node start, Node destination) {
+        solutionFound = false;
+        timeTaken = 0;
+        totalDistance = 0;
+        trafficSignalPassed = 0;
+        frontierCount = 0;
+        visitedCount = 0;
+
+        sldStartToFinish = UnitConverter.geopositionDistance(start, destination);
+
+        startTime = System.nanoTime();
+
         try {
+
             HeuristicEngine.generateHeuristic(graph, destination);
 
             path = new ArrayList<>();
             PriorityQueue<Node> frontiers = new PriorityQueue<Node>(50, new FScoreComparator());
-
-            timeTaken = 0;
-            totalDistance = 0;
-            intersectionPassed = 0;
 
             Node rootNode = start;
 //        Tree<Node> tree = new Tree<Node>(rootNode);
@@ -50,6 +65,7 @@ public class AStarSearch {
                     deriveSolution(selectedNode);
                     return;
                 }
+                visitedCount++;
                 visited.add(selectedNode);
                 System.out.println("Visit " + test++);
 
@@ -82,12 +98,14 @@ public class AStarSearch {
 
                         System.out.println("Node " + test++);
 
-                        if (!contained)
+                        if (!contained) {
                             frontiers.add(n);
+                            frontierCount++;
+                        }
 
 //                    if (treeNode.getObject().getWayArrayList().size() > 1) {
 //                        intersection = true;
-//                        intersectionPassed++;
+//                        trafficSignalPassed++;
 //                    }
 
 //                    treeNode.setTime(selectedNode.getTime() + timeS + (intersection ? 30 : 0));
@@ -130,8 +148,10 @@ public class AStarSearch {
     }
 
     private ArrayList<Node> deriveSolution(Node destination) {
-        ArrayList<Node> result = new ArrayList<>();
+        long endTime = System.nanoTime();
+        processTimeMS = (endTime - startTime) / 1000000;
 
+        ArrayList<Node> result = new ArrayList<>();
         Node selectedTreeNode = destination;
         timeTaken = destination.getGCost();
         totalDistance = 0;
@@ -142,6 +162,7 @@ public class AStarSearch {
         }
         Collections.reverse(result);
         path = result;
+        solutionFound = true;
 
         return result;
     }
@@ -158,12 +179,52 @@ public class AStarSearch {
         return timeTaken;
     }
 
-    public int getIntersectionPassed() {
-        return intersectionPassed;
+    public int getTrafficSignalPassed() {
+        return trafficSignalPassed;
     }
 
     public void setMapController(MapController.SearchTask mapTask) {
         this.mapTask = mapTask;
     }
 
+    public boolean isSolutionFound() {
+        return solutionFound;
+    }
+
+    public int getFrontierCount() {
+        return frontierCount;
+    }
+
+    public int getVisitedCount() {
+        return visitedCount;
+    }
+
+    public long getProcessTimeMS() {
+        return processTimeMS;
+    }
+
+    public double getDistanceStartFinish() { return sldStartToFinish; }
+
+    @Override
+    public String toString() {
+        if (solutionFound) {
+            return new StringBuilder()
+                    .append("Start: " + start.getId() + "\n")
+                    .append("Finish: " + finish.getId() + "\n")
+                    .append("Total Distance: " + totalDistance + "\n")
+                    .append("Total Time: " + totalTime + "\n")
+                    .append("Traffic Signal Passed: " + trafficSignalPassed + "\n");
+                    .append("Passed: " + path.size() + "\n")
+                    .append("Visited" + visitedCount + "\n")
+                    .append("Frontier: " + frontierCount + "\n")
+                    .append("Processed Time (ms): " processedTimeMS)
+                    .toString();
+        } else {
+            return new StringBuilder()
+                    .append("Start: " + start.getId() + "\n")
+                    .append("Finish: " + finish.getId() + "\n")
+                    .append("Solution not found...")
+                    .toString();
+        }
+    }
 }

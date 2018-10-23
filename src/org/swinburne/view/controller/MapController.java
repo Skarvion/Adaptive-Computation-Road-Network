@@ -24,14 +24,12 @@ import javafx.scene.shape.Line;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import org.swinburne.engine.AStarSearch;
-import org.swinburne.engine.Parser.MapTrafficSignalCSVParser;
 import org.swinburne.engine.Parser.OSMParser;
 import org.swinburne.engine.Parser.TrafficSignalCSVParser;
 import org.swinburne.model.Graph;
 import org.swinburne.model.Node;
 import org.swinburne.model.NodeType;
 import org.swinburne.model.Way;
-import org.swinburne.util.UnitConverter;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -243,6 +241,11 @@ public class MapController implements Initializable {
         }
 
         redrawEdges();
+    }
+
+    @FXML
+    void generateTestCase(ActionEvent event) {
+        new Thread(new TestCaseGenerator(graph, "TestCase1.csv", 500, 0)).start();
     }
 
     private void redrawEdges() {
@@ -597,7 +600,7 @@ public class MapController implements Initializable {
 
             System.out.println("Distance travelled: " + search.getTotalDistance());
             System.out.println("Time taken: " + search.getTimeTaken());
-            System.out.println("Intersection passed: " + search.getIntersectionPassed());
+            System.out.println("Intersection passed: " + search.getTrafficSignalPassed());
 
             String path = "";
             for (Node n : resultPath) {

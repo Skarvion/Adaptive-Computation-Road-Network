@@ -9,77 +9,99 @@
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TextArea?>
 <?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<HBox xmlns="http://javafx.com/javafx/10.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.swinburne.view.controller.MapController">
-   <children>
-      <ScrollPane fx:id="scrollPane" fitToHeight="true" fitToWidth="true" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" HBox.hgrow="SOMETIMES">
-         <content>
-            <AnchorPane fx:id="drawPane" onMouseClicked="#mapClick" prefHeight="850.0" prefWidth="850.0" style="-fx-background-color: white;">
+
+<BorderPane xmlns="http://javafx.com/javafx/10.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.swinburne.view.controller.MapController">
+   <center>
+      <HBox>
+         <children>
+            <ScrollPane fx:id="scrollPane" fitToHeight="true" fitToWidth="true" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" HBox.hgrow="SOMETIMES">
+               <content>
+                  <AnchorPane fx:id="drawPane" onMouseClicked="#mapClick" prefHeight="850.0" prefWidth="850.0" style="-fx-background-color: white;">
 
 </AnchorPane>
-         </content>
-      </ScrollPane>
-      <VBox maxWidth="250.0" minWidth="250.0" spacing="10.0">
-         <children>
-            <Label layoutX="20.0" layoutY="55.0" text="Map">
-               <font>
-                  <Font name="System Bold" size="18.0" />
-               </font>
-            </Label>
-            <HBox>
+               </content>
+            </ScrollPane>
+            <VBox maxWidth="250.0" minWidth="250.0" spacing="10.0">
                <children>
-                  <Button fx:id="openMapFileButton" mnemonicParsing="false" onAction="#openMap" text="Open map file..." />
-                  <Button fx:id="reloadButton" mnemonicParsing="false" onAction="#reload" text="Reload" />
+                  <Label layoutX="20.0" layoutY="55.0" text="Map">
+                     <font>
+                        <Font name="System Bold" size="18.0" />
+                     </font>
+                  </Label>
+                  <HBox>
+                     <children>
+                        <Button fx:id="openMapFileButton" mnemonicParsing="false" onAction="#openMap" text="Open map file..." />
+                        <Button fx:id="reloadButton" mnemonicParsing="false" onAction="#reload" text="Reload" />
+                     </children>
+                  </HBox>
+                  <Label text="Search Function">
+                     <font>
+                        <Font name="System Bold" size="18.0" />
+                     </font>
+                  </Label>
+                  <HBox>
+                     <children>
+                        <VBox prefWidth="100.0" spacing="10.0">
+                           <children>
+                              <RadioButton fx:id="startRadioButton" mnemonicParsing="false" text="Start" />
+                              <RadioButton fx:id="finishRadioButton" mnemonicParsing="false" text="Finish" />
+                           </children>
+                        </VBox>
+                        <VBox spacing="10.0">
+                           <children>
+                              <Button fx:id="clearPinsButton" mnemonicParsing="false" onAction="#clearPin" text="Clear Pins" />
+                              <Button fx:id="calculateButton" mnemonicParsing="false" onAction="#calculateAction" text="Search Path" />
+                              <Button fx:id="generateTestCaseButton" mnemonicParsing="false" onAction="#generateTestCase" text="Generate Test Case" />
+                           </children>
+                        </VBox>
+                     </children>
+                  </HBox>
+                  <Label text="Output">
+                     <font>
+                        <Font name="System Bold" size="18.0" />
+                     </font>
+                  </Label>
+                  <TextArea fx:id="outputTextArea" editable="false" maxWidth="1.7976931348623157E308">
+                     <font>
+                        <Font name="Consolas" size="12.0" />
+                     </font>
+                  </TextArea>
+                  <Label text="Properties">
+                     <font>
+                        <Font name="System Bold" size="18.0" />
+                     </font>
+                  </Label>
+                  <TableView fx:id="propertiesTableView" prefHeight="200.0" prefWidth="200.0">
+                    <columns>
+                      <TableColumn fx:id="keyTableCol" maxWidth="1.7976931348623157E308" minWidth="-Infinity" prefWidth="75.0" text="Key" />
+                      <TableColumn fx:id="valueTableCol" maxWidth="1.7976931348623157E308" prefWidth="75.0" text="Value" />
+                    </columns>
+                  </TableView>
+                  <Label text="Navigation">
+                     <font>
+                        <Font name="System Bold" size="18.0" />
+                     </font>
+                  </Label>
+                  <Button fx:id="zoomInButton" mnemonicParsing="false" onAction="#zoomIn" text="Zoom In" />
+                  <Button fx:id="zoomOutButton" mnemonicParsing="false" onAction="#zoomOut" text="Zoom Out" />
                </children>
-            </HBox>
-            <Label text="Search Function">
-               <font>
-                  <Font name="System Bold" size="18.0" />
-               </font>
-            </Label>
-            <VBox prefWidth="100.0" spacing="10.0">
-               <children>
-                  <RadioButton fx:id="startRadioButton" mnemonicParsing="false" text="Start" />
-                  <RadioButton fx:id="finishRadioButton" mnemonicParsing="false" text="Finish" />
-               </children>
+               <padding>
+                  <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+               </padding>
             </VBox>
-            <Button fx:id="clearPinsButton" layoutX="20.0" layoutY="183.0" mnemonicParsing="false" onAction="#clearPin" text="Clear Pins" />
-            <Button fx:id="calculateButton" mnemonicParsing="false" onAction="#calculateAction" text="Search Path" />
-            <Label text="Output">
-               <font>
-                  <Font name="System Bold" size="18.0" />
-               </font>
-            </Label>
-            <TextArea fx:id="outputTextArea" editable="false" maxWidth="1.7976931348623157E308">
-               <font>
-                  <Font name="Consolas" size="12.0" />
-               </font>
-            </TextArea>
-            <Label text="Properties">
-               <font>
-                  <Font name="System Bold" size="18.0" />
-               </font>
-            </Label>
-            <TableView fx:id="propertiesTableView" prefHeight="200.0" prefWidth="200.0">
-              <columns>
-                <TableColumn fx:id="keyTableCol" maxWidth="1.7976931348623157E308" minWidth="-Infinity" prefWidth="75.0" text="Key" />
-                <TableColumn fx:id="valueTableCol" maxWidth="1.7976931348623157E308" prefWidth="75.0" text="Value" />
-              </columns>
-            </TableView>
-            <Label text="Navigation">
-               <font>
-                  <Font name="System Bold" size="18.0" />
-               </font>
-            </Label>
-            <Button fx:id="zoomInButton" mnemonicParsing="false" onAction="#zoomIn" text="Zoom In" />
-            <Button fx:id="zoomOutButton" mnemonicParsing="false" onAction="#zoomOut" text="Zoom Out" />
          </children>
-         <padding>
-            <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
-         </padding>
-      </VBox>
-   </children>
-</HBox>
+      </HBox>
+   </center>
+   <bottom>
+      <HBox BorderPane.alignment="CENTER">
+         <children>
+            <Label fx:id="statusLabel" text="Status" />
+         </children>
+      </HBox>
+   </bottom>
+</BorderPane>
