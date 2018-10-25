@@ -8,14 +8,14 @@
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-
-<BorderPane xmlns="http://javafx.com/javafx/10.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.swinburne.view.controller.MapController">
+<BorderPane xmlns="http://javafx.com/javafx/9.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.swinburne.view.controller.MapController">
    <center>
       <HBox>
          <children>
@@ -61,6 +61,8 @@
                         </VBox>
                      </children>
                   </HBox>
+                  <TextField fx:id="nodeSearchText" />
+                  <Button fx:id="searchNodeButton" mnemonicParsing="false" onAction="#searchNode" text="Search ID" />
                   <Label text="Output">
                      <font>
                         <Font name="System Bold" size="18.0" />

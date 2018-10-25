@@ -116,13 +116,7 @@ public class Way {
             }
         } else {
             if (pos == (nodeOrderedList.size() - 1)) {
-                if (nodeOrderedList.get(0) == nodeOrderedList.get(nodeOrderedList.size() - 1)) {
-                    Node[] result = new Node[1];
-                    result[0] = nodeOrderedList.get(1);
-                    return result;
-                } else {
-                    return new Node[0];
-                }
+                return new Node[0];
             } else {
                 Node[] result = new Node[1];
                 result[0] = nodeOrderedList.get(pos + 1);

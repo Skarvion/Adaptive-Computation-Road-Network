@@ -1,7 +1,13 @@
 package org.swinburne.view.controller;
 
 import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
+import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.ObservableMap;
@@ -23,9 +29,12 @@ import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.util.StringConverter;
+import javafx.util.converter.NumberStringConverter;
 import org.swinburne.engine.AStarSearch;
 import org.swinburne.engine.Parser.OSMParser;
 import org.swinburne.engine.Parser.TrafficSignalCSVParser;
+import org.swinburne.engine.TestCaseGenerator;
 import org.swinburne.model.Graph;
 import org.swinburne.model.Node;
 import org.swinburne.model.NodeType;
@@ -66,6 +75,12 @@ public class MapController implements Initializable {
     private Button calculateButton;
 
     @FXML
+    private TextField nodeSearchText;
+
+    @FXML
+    private Button searchNodeButton;
+
+    @FXML
     private TextArea outputTextArea;
 
     @FXML
@@ -76,6 +91,12 @@ public class MapController implements Initializable {
 
     @FXML
     private TableColumn<PropertyEntry, String> valueTableCol;
+
+    @FXML
+    private Button generateTestCaseButton;
+
+    @FXML
+    private Label statusLabel;
 
     private final double PANE_OFFSET = 2;
 
@@ -150,6 +171,36 @@ public class MapController implements Initializable {
 
     }
 
+    @FXML
+    void searchNode(ActionEvent event) {
+        Node searchedNode = graph.getNode(nodeSearchText.getText());
+        if (searchedNode == null) {
+            System.out.println("Cannot search node with such ID!");
+            return;
+        }
+        MapNode searchedMapNode = graphNodeMap.get(searchedNode);
+        if (searchedMapNode == null) {
+            System.out.println("Error! Node exists but not map node!");
+            return;
+        }
+
+        switch (state) {
+            case None:
+                System.out.println("Node ID: " + searchedMapNode.getNode().getId());
+                System.out.println("Ways: " + searchedMapNode.getNode().getWayArrayList().size());
+                System.out.println("Type: " + searchedMapNode.getNode().getType());
+                break;
+            case Start:
+                selectedStartNode = searchedMapNode;
+                displayPin(startPinView, searchedMapNode);
+                break;
+            case Finish:
+                selectedFinishNode = searchedMapNode;
+                displayPin(finishPinView, searchedMapNode);
+                break;
+        }
+    }
+
     public void loadOSMFile(Map<String, Object> map) {
         topLat = (Double) map.get("topLat");
         leftLon = (Double) map.get("leftLon");
@@ -184,7 +235,8 @@ public class MapController implements Initializable {
     @FXML
     private void reload(ActionEvent event) {
         if (mapFile != null) {
-            graph = OSMParser.parseFromOSM(mapFile, topLat, leftLon, botLat, rightLon);
+            //@TODO: chagne here later
+            graph = OSMParser.parseFromOSM(mapFile, -37.811323, 145.022338, -37.825929, 145.046812);
             graph = TrafficSignalCSVParser.setTrafficIntersection(graph, "Traffic-Signal.csv");
             drawGraph();
         }
@@ -245,7 +297,16 @@ public class MapController implements Initializable {
 
     @FXML
     void generateTestCase(ActionEvent event) {
-        new Thread(new TestCaseGenerator(graph, "TestCase1.csv", 500, 0)).start();
+        TestCaseGenerator generator = new TestCaseGenerator(graph, "TestCase1.csv", 500);
+        generator.progressProperty().addListener((observable, oldValue, newValue) -> {
+            statusLabel.setText("Test case: " + newValue);
+        });
+        generator.messageProperty().addListener(((observable, oldValue, newValue) -> {
+            outputTextArea.setText(newValue);
+        }));
+
+        generator.generateTestCase();
+//        new Thread(generator).start();
     }
 
     private void redrawEdges() {
@@ -558,7 +619,7 @@ public class MapController implements Initializable {
         }
     }
 
-    private class StringConverter extends javafx.util.StringConverter<SimpleObjectProperty<MapNode>> {
+    private class NodeToStringConverter extends javafx.util.StringConverter<SimpleObjectProperty<MapNode>> {
         @Override
         public String toString(SimpleObjectProperty<MapNode> object) {
             return object.get().getNode().getLabel();
@@ -657,6 +718,34 @@ public class MapController implements Initializable {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
+        }
+    }
+
+    public void drawFrontier(Node source, Node destination) {
+        try {
+            if (delayMS > 0) Thread.sleep(delayMS);
+            Platform.runLater(() -> {
+                MapNode sourceMapNode = graphNodeMap.get(source);
+                MapNode destinationMapNode = graphNodeMap.get(destination);
+
+                if (sourceMapNode == null || destinationMapNode == null) return;
+
+                Line line = new Line();
+
+                line.setStartX(sourceMapNode.getPosX());
+                line.setStartY(sourceMapNode.getPosY());
+
+                line.setEndX(destinationMapNode.getPosX());
+                line.setEndY(destinationMapNode.getPosY());
+
+                line.setStrokeWidth(4);
+                line.setStroke(Color.YELLOW);
+
+                drawPane.getChildren().add(line);
+                solutionObservableList.add(line);
+            });
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
     }
 

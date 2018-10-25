@@ -1,10 +1,13 @@
 package org.swinburne.engine;
 
+import javafx.application.Platform;
 import javafx.concurrent.Task;
+import javafx.scene.control.Alert;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.swinburne.model.Graph;
 import org.swinburne.model.Node;
+import org.swinburne.view.controller.MapController;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -24,14 +27,25 @@ public class TestCaseGenerator extends Task<Integer> {
     private long startTime = 0;
     private long processTimeMS = 0;
 
+    private MapController mapController = null;
+
     private boolean simulateTraffic;
 
-    public TestCaseGenerator(Graph graph, String filename, int testCase, int startID) {
+    public TestCaseGenerator(Graph graph, String filename, int testCase) {
         this.graph = graph;
         this.filename = filename;
         this.testCase = testCase;
         this.startID = 0;
-        this.simulateTraffice = false;
+        this.simulateTraffic = false;
+    }
+
+    public TestCaseGenerator(Graph graph, String filename, int testCase, MapController mapController) {
+        this.graph = graph;
+        this.filename = filename;
+        this.testCase = testCase;
+        this.startID = 0;
+        this.simulateTraffic = false;
+        this.mapController = mapController;
     }
 
     public TestCaseGenerator(Graph graph, String filename, int testCase, int startID) {
@@ -39,17 +53,28 @@ public class TestCaseGenerator extends Task<Integer> {
         this.filename = filename;
         this.testCase = testCase;
         this.startID = startID;
-        this.simulateTraffice = false;
+        this.simulateTraffic = false;
     }
 
     public void generateTestCase() {
-        call();
+        try {
+            call();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
+
+
 
     @Override
     protected Integer call() throws Exception {
         int iteration = startID;
         startTime = System.nanoTime();
+        Platform.runLater(() -> {
+            Alert startAlert = new Alert(Alert.AlertType.INFORMATION, "Test case generation started!");
+            startAlert.show();
+        });
+
         try {
 
             BufferedWriter writer = new BufferedWriter(new FileWriter(new File(filename)));
@@ -69,6 +94,7 @@ public class TestCaseGenerator extends Task<Integer> {
             nodeList = new ArrayList(graph.getNodeMap().values());
 
             for (iteration = startID; iteration < startID + testCase; iteration++) {
+
                 Random random = new Random();
                 int startIndex = random.nextInt(nodeList.size());
                 int destinationIndex;
@@ -78,6 +104,7 @@ public class TestCaseGenerator extends Task<Integer> {
 
                 Node start = nodeList.get(startIndex);
                 Node destination = nodeList.get(destinationIndex);
+                System.out.println("Test case " + iteration + " | Start: " + start.getId() + " | " + destination.getId());
 
                 AStarSearch search = new AStarSearch();
                 search.computeDirection(graph, start, destination);
@@ -108,11 +135,17 @@ public class TestCaseGenerator extends Task<Integer> {
                             "-");
                 }
 
-                updateMessage(search.toString());
+                updateMessage("Test case " + iteration + "\n" + search.toString());
                 updateProgress(iteration, startID + testCase);
             }
 
             printer.flush();
+
+            Platform.runLater(() -> {
+                Alert completedAlert = new Alert(Alert.AlertType.INFORMATION, "Test case generation completed...");
+                completedAlert.show();
+            });
+
         } catch (IOException e) {
             e.printStackTrace();
             updateMessage("Test case generator IOException Error");
@@ -120,7 +153,7 @@ public class TestCaseGenerator extends Task<Integer> {
             e.printStackTrace();
             updateMessage("Test case generator Cancelled");
         }
-        processTimeMS = (System.nanoTime() - starTime) / 1000000;
+        processTimeMS = (System.nanoTime() - startTime) / 1000000;
 
         return iteration;
     }

@@ -15,6 +15,8 @@ public class AStarSearch {
     private ArrayList<Node> path = new ArrayList<>();
     private boolean solutionFound = false;
 
+    private Node start;
+    private Node destination;
     private double totalDistance = 0;
     private double timeTaken = 0;
     private int frontierCount = 0;
@@ -28,8 +30,11 @@ public class AStarSearch {
     private final double AVERAGE_INTERSECTION_WAITING_TIME_S = 30;
 
     private MapController.SearchTask mapTask;
+    private MapController mapController = null;
 
     public void computeDirection(Graph graph, Node start, Node destination) {
+        this.start = start;
+        this.destination = destination;
         solutionFound = false;
         timeTaken = 0;
         totalDistance = 0;
@@ -67,11 +72,11 @@ public class AStarSearch {
                 }
                 visitedCount++;
                 visited.add(selectedNode);
-                System.out.println("Visit " + test++);
+//                System.out.println("Visit " + test++);
 
                 for (Way w : selectedNode.getWayArrayList()) {
 
-                    System.out.println("Way " + test++);
+//                    System.out.println("Way " + test++);
                     Node[] adjacentNodes = w.getAdjacents(selectedNode);
                     if (adjacentNodes == null) {
                         continue;
@@ -96,7 +101,7 @@ public class AStarSearch {
                         n.setGCost(totalGScore);
                         n.setFValue(n.getGCost() + timeToGoal);
 
-                        System.out.println("Node " + test++);
+//                        System.out.println("Node " + test++);
 
                         if (!contained) {
                             frontiers.add(n);
@@ -118,11 +123,16 @@ public class AStarSearch {
                             Node tn = selectedNode;
                             mapTask.drawFrontier(tn, n);
                         }
+
+                        if (mapController != null) {
+                            Node tn = selectedNode;
+                            mapController.drawFrontier(tn, n);
+                        }
                     }
                 }
             }
 
-            System.out.println("Break");
+//            System.out.println("Break");
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -157,7 +167,9 @@ public class AStarSearch {
         totalDistance = 0;
         while (selectedTreeNode != null) {
             result.add(selectedTreeNode);
-            if (selectedTreeNode.getParent() != null) totalDistance += UnitConverter.geopositionDistance(selectedTreeNode, selectedTreeNode.getParent());
+            if (selectedTreeNode.getParent() != null) {
+                totalDistance += UnitConverter.geopositionDistance(selectedTreeNode, selectedTreeNode.getParent());
+            }
             selectedTreeNode = selectedTreeNode.getParent();
         }
         Collections.reverse(result);
@@ -187,6 +199,10 @@ public class AStarSearch {
         this.mapTask = mapTask;
     }
 
+    public void setMapControllerv2(MapController mapControllerv2) {
+        this.mapController = mapControllerv2;
+    }
+
     public boolean isSolutionFound() {
         return solutionFound;
     }
@@ -210,19 +226,19 @@ public class AStarSearch {
         if (solutionFound) {
             return new StringBuilder()
                     .append("Start: " + start.getId() + "\n")
-                    .append("Finish: " + finish.getId() + "\n")
+                    .append("Finish: " + destination.getId() + "\n")
                     .append("Total Distance: " + totalDistance + "\n")
-                    .append("Total Time: " + totalTime + "\n")
-                    .append("Traffic Signal Passed: " + trafficSignalPassed + "\n");
+                    .append("Total Time: " + timeTaken + "\n")
+                    .append("Traffic Signal Passed: " + trafficSignalPassed + "\n")
                     .append("Passed: " + path.size() + "\n")
                     .append("Visited" + visitedCount + "\n")
                     .append("Frontier: " + frontierCount + "\n")
-                    .append("Processed Time (ms): " processedTimeMS)
+                    .append("Processed Time (ms): " + processTimeMS)
                     .toString();
         } else {
             return new StringBuilder()
                     .append("Start: " + start.getId() + "\n")
-                    .append("Finish: " + finish.getId() + "\n")
+                    .append("Finish: " + destination.getId() + "\n")
                     .append("Solution not found...")
                     .toString();
         }
