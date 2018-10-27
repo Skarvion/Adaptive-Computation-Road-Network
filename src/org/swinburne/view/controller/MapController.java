@@ -1,13 +1,7 @@
 package org.swinburne.view.controller;
 
 import javafx.application.Platform;
-import javafx.beans.binding.Bindings;
-import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.ObservableMap;
@@ -29,8 +23,6 @@ import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import javafx.util.StringConverter;
-import javafx.util.converter.NumberStringConverter;
 import org.swinburne.engine.AStarSearch;
 import org.swinburne.engine.Parser.OSMParser;
 import org.swinburne.engine.Parser.TrafficSignalCSVParser;
@@ -256,6 +248,7 @@ public class MapController implements Initializable {
     private void calculateAction(ActionEvent event) {
         if (selectedStartNode == null || selectedFinishNode == null) return;
 
+        graph.reset();
         drawPane.getChildren().removeAll(solutionObservableList);
         solutionObservableList.clear();
 
@@ -297,7 +290,7 @@ public class MapController implements Initializable {
 
     @FXML
     void generateTestCase(ActionEvent event) {
-        TestCaseGenerator generator = new TestCaseGenerator(graph, "TestCase1.csv", 500);
+        TestCaseGenerator generator = new TestCaseGenerator(graph, "TestCase1.csv", 10000);
         generator.progressProperty().addListener((observable, oldValue, newValue) -> {
             statusLabel.setText("Test case: " + newValue);
         });
@@ -362,8 +355,13 @@ public class MapController implements Initializable {
         double graphWidth = Math.abs(rightLon - leftLon);
         double graphHeight = Math.abs(topLat - botLat);
 
+        graph.getNodeMap().entrySet().removeIf(e -> e.getValue().getWayArrayList().isEmpty());
         for (Node n : graph.getNodeMap().values()) {
-            if (n.getWayArrayList().size() == 0) continue;
+
+            if (n.getWayArrayList().size() == 0) {
+                graph.removeNode(n);
+                continue;
+            }
 
             double relY = Math.abs(topLat - n.getLatitude());
             double relX = Math.abs(leftLon - n.getLongitude());
@@ -643,7 +641,7 @@ public class MapController implements Initializable {
         protected Void call() throws Exception {
             AStarSearch search = new AStarSearch();
             search.setMapController(this);
-            search.computeDirection(graph, selectedStartNode.getNode(), selectedFinishNode.getNode());
+            search.computeDirectionDistance(graph, selectedStartNode.getNode(), selectedFinishNode.getNode());
 
             resultPath.clear();
             resultPath.addAll(search.getPath());

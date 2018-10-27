@@ -32,7 +32,7 @@ public class AStarSearch {
     private MapController.SearchTask mapTask;
     private MapController mapController = null;
 
-    public void computeDirection(Graph graph, Node start, Node destination) {
+    public void computeDirectionTime(Graph graph, Node start, Node destination) {
         this.start = start;
         this.destination = destination;
         solutionFound = false;
@@ -67,7 +67,7 @@ public class AStarSearch {
             Node selectedNode;
             while ((selectedNode = frontiers.poll()) != null) {
                 if (selectedNode == destination) {
-                    deriveSolution(selectedNode);
+                    deriveSolutionTime(selectedNode);
                     return;
                 }
                 visitedCount++;
@@ -138,6 +138,111 @@ public class AStarSearch {
         }
     }
 
+    public void computeDirectionDistance(Graph graph, Node start, Node destination) {
+        this.start = start;
+        this.destination = destination;
+        solutionFound = false;
+        timeTaken = 0;
+        totalDistance = 0;
+        trafficSignalPassed = 0;
+        frontierCount = 0;
+        visitedCount = 0;
+
+        sldStartToFinish = UnitConverter.geopositionDistance(start, destination);
+
+        startTime = System.nanoTime();
+
+        try {
+
+            HeuristicEngine.generateHeuristic(graph, destination);
+
+            path = new ArrayList<>();
+            PriorityQueue<Node> frontiers = new PriorityQueue<Node>(50, new FScoreComparator());
+
+            Node rootNode = start;
+//        Tree<Node> tree = new Tree<Node>(rootNode);
+
+            ArrayList<Node> visited = new ArrayList<>();
+
+            rootNode.setGCost(0);
+            rootNode.setFValue(UnitConverter.geopositionDistance(rootNode.getLatitude(), rootNode.getLongitude(), destination.getLatitude(), destination.getLongitude()));
+
+            frontiers.add(rootNode);
+
+            int test = 0;
+            Node selectedNode;
+            while ((selectedNode = frontiers.poll()) != null) {
+                if (selectedNode == destination) {
+                    deriveSolutionDistance(selectedNode);
+                    return;
+                }
+                visitedCount++;
+                visited.add(selectedNode);
+
+                for (Way w : selectedNode.getWayArrayList()) {
+                    Node[] adjacentNodes = w.getAdjacents(selectedNode);
+                    if (adjacentNodes == null) {
+                        continue;
+                    }
+
+                double speedLimitS = UnitConverter.kmhToMs(w.getSpeedLimitKmh());
+                    for (Node n : adjacentNodes) {
+                        if (visited.contains(n)) continue;
+
+                        double timeTraversed = UnitConverter.geopositionDistance(selectedNode.getLatitude(), selectedNode.getLongitude(), n.getLatitude(), n.getLongitude()) / w.getSpeedLimitKmh();
+                        double totalGScore = selectedNode.getGCost();
+
+                        boolean contained = true;
+                        if (!frontiers.contains(n)) contained = false;
+                        else if (totalGScore >= n.getGCost()) continue;
+
+                        n.setParent(selectedNode);
+                        selectedNode.addChild(n);
+
+                        double distanceToGoal = UnitConverter.geopositionDistance(n.getLatitude(), n.getLongitude(), destination.getLatitude(), destination.getLongitude());
+//                        double timeToGoal = distanceToGoal / UnitConverter.kmhToMs(50);
+
+                        n.setGCost(totalGScore);
+                        n.setFValue(n.getGCost() + distanceToGoal);
+                        n.setTimeTravelled(selectedNode.getTimeTravelled() + timeTraversed);
+
+//                        System.out.println("Node " + test++);
+
+                        if (!contained) {
+                            frontiers.add(n);
+                            frontierCount++;
+                        }
+
+//                    if (treeNode.getObject().getWayArrayList().size() > 1) {
+//                        intersection = true;
+//                        trafficSignalPassed++;
+//                    }
+
+//                    treeNode.setTime(selectedNode.getTime() + timeS + (intersection ? 30 : 0));
+//                    treeNode.setDistance(selectedNode.getDistance() + distance);
+//                    treeNode.setCost(selectedNode.getCost() + distance + n.getFValue());
+
+//                    treeNode.putMetaData("time", calculateTravelTime(w, selectedNode.getMetaData("time")) + (intersection ? 30 : 0));
+
+                        if (mapTask != null) {
+                            Node tn = selectedNode;
+                            mapTask.drawFrontier(tn, n);
+                        }
+
+                        if (mapController != null) {
+                            Node tn = selectedNode;
+                            mapController.drawFrontier(tn, n);
+                        }
+                    }
+                }
+            }
+
+//            System.out.println("Break");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     private double calculateTravelTime(Way way, double totalTime) {
         double speedLimit = way.getSpeedLimitKmh();
         // If speed limit is not defined, assume running at 40km/h
@@ -157,13 +262,35 @@ public class AStarSearch {
         return false;
     }
 
-    private ArrayList<Node> deriveSolution(Node destination) {
+    private ArrayList<Node> deriveSolutionTime(Node destination) {
         long endTime = System.nanoTime();
         processTimeMS = (endTime - startTime) / 1000000;
 
         ArrayList<Node> result = new ArrayList<>();
         Node selectedTreeNode = destination;
         timeTaken = destination.getGCost();
+        totalDistance = 0;
+        while (selectedTreeNode != null) {
+            result.add(selectedTreeNode);
+            if (selectedTreeNode.getParent() != null) {
+                totalDistance += UnitConverter.geopositionDistance(selectedTreeNode, selectedTreeNode.getParent());
+            }
+            selectedTreeNode = selectedTreeNode.getParent();
+        }
+        Collections.reverse(result);
+        path = result;
+        solutionFound = true;
+
+        return result;
+    }
+
+    private ArrayList<Node> deriveSolutionDistance(Node destination) {
+        long endTime = System.nanoTime();
+        processTimeMS = (endTime - startTime) / 1000000;
+
+        ArrayList<Node> result = new ArrayList<>();
+        Node selectedTreeNode = destination;
+        timeTaken = destination.getTimeTravelled();
         totalDistance = 0;
         while (selectedTreeNode != null) {
             result.add(selectedTreeNode);

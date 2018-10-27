@@ -13,6 +13,7 @@ public class Node {
 
     private double fValue;
     private double gCost;
+    private double timeTravelled = 0;
 
     private Node parent = null;
     private ArrayList<Node> childrenList = new ArrayList<>();
@@ -105,4 +106,12 @@ public class Node {
     }
 
     public ArrayList<Node> getChildren() { return this.childrenList; }
+
+    public double getTimeTravelled() {
+        return timeTravelled;
+    }
+
+    public void setTimeTravelled(double timeTravelled) {
+        this.timeTravelled = timeTravelled;
+    }
 }

@@ -54,6 +54,10 @@ public class Way {
         return -1;
     }
 
+    public boolean removeNode(Node node) {
+        return nodeOrderedList.remove(node);
+    }
+
     public void setNodeList(ArrayList<Node> nodeList) {
         this.nodeOrderedList = nodeList;
         for (Node n : nodeList) {

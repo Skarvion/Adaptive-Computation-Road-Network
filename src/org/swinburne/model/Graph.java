@@ -46,6 +46,23 @@ public class Graph implements Serializable {
         return wayMap;
     }
 
+    public void reset() {
+        for (Node n : nodeMap.values()) {
+            n.setFValue(0);
+            n.setGCost(0);
+            n.getChildren().clear();
+            n.setParent(null);
+            n.setTimeTravelled(0);
+        }
+    }
+
+    public Node removeNode(Node node) {
+        for (Way w : node.getWayArrayList()) {
+            w.removeNode(node);
+        }
+        return nodeMap.remove(node.getId());
+    }
+
     public boolean addWay(Way way) {
         if (way.getId() != null) {
             if (getNode(way.getId()) != null) {

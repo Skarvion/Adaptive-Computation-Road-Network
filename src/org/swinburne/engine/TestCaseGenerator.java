@@ -1,15 +1,10 @@
 package org.swinburne.engine;
 
-import javafx.application.Platform;
 import javafx.concurrent.Task;
-import javafx.scene.control.Alert;
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVPrinter;
 import org.swinburne.model.Graph;
 import org.swinburne.model.Node;
 import org.swinburne.view.controller.MapController;
 
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -64,36 +59,19 @@ public class TestCaseGenerator extends Task<Integer> {
         }
     }
 
-
-
     @Override
     protected Integer call() throws Exception {
         int iteration = startID;
         startTime = System.nanoTime();
-        Platform.runLater(() -> {
-            Alert startAlert = new Alert(Alert.AlertType.INFORMATION, "Test case generation started!");
-            startAlert.show();
-        });
 
         try {
 
-            BufferedWriter writer = new BufferedWriter(new FileWriter(new File(filename)));
-            CSVPrinter printer = new CSVPrinter(writer, CSVFormat.DEFAULT
-                    .withHeader("ID",
-                            "Start Node ID",
-                            "End Node ID",
-                            "SLD Start to Finish",
-                            "Total Distance",
-                            "Total Travel Time",
-                            "Traffic Signal Passed",
-                            "Path Node Count",
-                            "Visited Node Count",
-                            "Frontier Node Count",
-                            "Processed Time"));
+            FileWriter timeOutput = new FileWriter(new File(filename + "_TIME"));
+            FileWriter distanceOutput = new FileWriter(new File(filename + "_DISTANCE"));
 
             nodeList = new ArrayList(graph.getNodeMap().values());
 
-            for (iteration = startID; iteration < startID + testCase; iteration++) {
+            for (iteration = startID; iteration < (startID + testCase); iteration++) {
 
                 Random random = new Random();
                 int startIndex = random.nextInt(nodeList.size());
@@ -104,47 +82,65 @@ public class TestCaseGenerator extends Task<Integer> {
 
                 Node start = nodeList.get(startIndex);
                 Node destination = nodeList.get(destinationIndex);
-                System.out.println("Test case " + iteration + " | Start: " + start.getId() + " | " + destination.getId());
+//                System.out.println("Test case " + iteration + " | Start: " + start.getId() + " | " + destination.getId());
 
-                AStarSearch search = new AStarSearch();
-                search.computeDirection(graph, start, destination);
+                graph.reset();
 
-                if (search.isSolutionFound()) {
-                    printer.printRecord(iteration,
+                AStarSearch searchTime = new AStarSearch();
+                AStarSearch searchDistance = new AStarSearch();
+                searchTime.computeDirectionTime(graph, start, destination);
+                searchDistance.computeDirectionDistance(graph, start, destination);
+
+                if (searchTime.isSolutionFound()) {
+                    timeOutput.write(parseResult(iteration,
                             start.getId(),
                             destination.getId(),
-                            search.getDistanceStartFinish(),
-                            search.getTotalDistance(),
-                            search.getTimeTaken(),
-                            search.getTrafficSignalPassed(),
-                            search.getPath().size(),
-                            search.getVisitedCount(),
-                            search.getFrontierCount(),
-                            search.getProcessTimeMS());
+                            searchTime.getDistanceStartFinish(),
+                            searchTime.getTotalDistance(),
+                            searchTime.getTimeTaken(),
+                            searchTime.getTrafficSignalPassed(),
+                            searchTime.getPath().size(),
+                            searchTime.getVisitedCount(),
+                            searchTime.getFrontierCount(),
+                            searchTime.getProcessTimeMS()) + "\n");
                 } else {
-                    printer.printRecord(iteration,
-                            start.getId(),
-                            destination.getId(),
-                            "-",
-                            "-",
-                            "-",
-                            "-",
-                            "-",
-                            "-",
-                            "-",
-                            "-");
+                    timeOutput.write(parseEmpty(iteration, start.getId(), destination.getId()) + "\n");
                 }
 
-                updateMessage("Test case " + iteration + "\n" + search.toString());
-                updateProgress(iteration, startID + testCase);
+                if (searchDistance.isSolutionFound()) {
+                    distanceOutput.write(parseResult(iteration,
+                            start.getId(),
+                            destination.getId(),
+                            searchDistance.getDistanceStartFinish(),
+                            searchDistance.getTotalDistance(),
+                            searchDistance.getTimeTaken(),
+                            searchDistance.getTrafficSignalPassed(),
+                            searchDistance.getPath().size(),
+                            searchDistance.getVisitedCount(),
+                            searchDistance.getFrontierCount(),
+                            searchDistance.getProcessTimeMS()) + "\n");
+                } else {
+                    distanceOutput.write(parseEmpty(iteration, start.getId(), destination.getId()) + "\n");
+                }
+
+                if (searchDistance.isSolutionFound() && !searchTime.isSolutionFound()) {
+                    System.out.println("Woops, distance found solution!");
+                } else if (!searchDistance.isSolutionFound() && searchTime.isSolutionFound()) {
+                    System.out.println("Whoa, time found solution!");
+                }
+//                updateMessage("Test case " + iteration + "\n" + search.toString());
+//                updateProgress(iteration, startID + testCase);
             }
 
-            printer.flush();
+            timeOutput.close();
+            distanceOutput.close();
 
-            Platform.runLater(() -> {
-                Alert completedAlert = new Alert(Alert.AlertType.INFORMATION, "Test case generation completed...");
-                completedAlert.show();
-            });
+            System.out.println("Test case generation done");
+
+//            Platform.runLater(() -> {
+//                Alert completedAlert = new Alert(Alert.AlertType.INFORMATION, "Test case generation completed...");
+//                completedAlert.show();
+//            });
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -156,6 +152,50 @@ public class TestCaseGenerator extends Task<Integer> {
         processTimeMS = (System.nanoTime() - startTime) / 1000000;
 
         return iteration;
+    }
+
+    private String parseEmpty(int iteration, String startID, String destinationID) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(quoteMarks(Integer.toString(iteration)));
+        sb.append(quoteMarks(startID));
+        sb.append(quoteMarks(destinationID));
+        sb.append(quoteMarks("-"));
+        sb.append(quoteMarks("-"));
+        sb.append(quoteMarks("-"));
+        sb.append(quoteMarks("-"));
+        sb.append(quoteMarks("-"));
+        sb.append(quoteMarks("-"));
+        sb.append(quoteMarks("-"));
+        sb.append(quoteMarks("-"));
+        sb.deleteCharAt(sb.length() - 1);
+        return sb.toString();
+    }
+
+    private String parseResult(int iteration, String startID, String destinationID, double sldDistance, double totalDistance, double timeTaken, int trafficSignalpassed, int size, int visitedCount, int frontierCount, long processTimeMS) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(quoteMarks(Integer.toString(iteration)));
+        sb.append(quoteMarks(startID));
+        sb.append(quoteMarks(destinationID));
+        sb.append(quoteMarks(Double.toString(sldDistance)));
+        sb.append(quoteMarks(Double.toString(totalDistance)));
+        sb.append(quoteMarks(Double.toString(timeTaken)));
+        sb.append(quoteMarks(Integer.toString(trafficSignalpassed)));
+        sb.append(quoteMarks(Integer.toString(size)));
+        sb.append(quoteMarks(Integer.toString(visitedCount)));
+        sb.append(quoteMarks(Integer.toString(frontierCount)));
+        sb.append(quoteMarks(Long.toString(processTimeMS)));
+        sb.deleteCharAt(sb.length() - 1);
+
+        return sb.toString();
+    }
+
+    /**
+     * Add quote mark around string and comma
+     * @param content content string
+     * @return quoted string
+     */
+    private String quoteMarks(String content) {
+        return "\"" + content + "\",";
     }
 
     public long processTimeMS() { return processTimeMS; }
