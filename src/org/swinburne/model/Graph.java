@@ -48,8 +48,9 @@ public class Graph implements Serializable {
 
     public void reset() {
         for (Node n : nodeMap.values()) {
-            n.setFValue(0);
-            n.setGCost(0);
+            n.setFValue(Double.MAX_VALUE);
+            n.setGCost(Double.MAX_VALUE);
+            n.setHeuristic(Double.MAX_VALUE);
             n.getChildren().clear();
             n.setParent(null);
             n.setTimeTravelled(0);

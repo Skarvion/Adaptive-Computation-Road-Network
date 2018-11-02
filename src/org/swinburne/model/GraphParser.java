@@ -39,7 +39,7 @@ public class GraphParser {
                 Way way = new Way();
 
                 Node source = result.getNode(jsonObj.getString("source"));
-                Node destination = result.getNode(jsonObj.getString("destination"));
+                Node destination = result.getNode(jsonObj.getString("destinationNode"));
 
                 way.addNode(source);
                 way.addNode(destination);
@@ -55,7 +55,7 @@ public class GraphParser {
                 way.setTraffic(jsonObj.getFloat("traffic"));
 
                 if (jsonObj.getBoolean("two-way")) {
-                    // Use copy method, doesn't copy the id, source and destination. Will review
+                    // Use copy method, doesn't copy the id, source and destinationNode. Will review
                     Way secondWay = new Way(way);
                     secondWay.setId(RandomStringGenerator.generateRandomString(10));
                     secondWay.addNode(source);
@@ -102,7 +102,7 @@ public class GraphParser {
 //                    edgeJSON.put("speed-limit", e.getSpeedLimit());
 //                    edgeJSON.put("traffic", e.getTraffic());
 //                    edgeJSON.put("source", e.getSource().getId());
-//                    edgeJSON.put("destination", e.getDestination().getId());
+//                    edgeJSON.put("destinationNode", e.getDestination().getId());
 //
 //                    foundWay.add(e);
 //                    edgeArray.put(edgeJSON);

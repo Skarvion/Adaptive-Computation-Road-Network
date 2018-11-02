@@ -11,6 +11,7 @@ public class Node {
     private double longitude;
     private NodeType type = NodeType.Road;
 
+    private double heuristic;
     private double fValue;
     private double gCost;
     private double timeTravelled = 0;
@@ -69,13 +70,19 @@ public class Node {
         this.longitude = longitude;
     }
 
+    public double getHeuristic() {
+        return heuristic;
+    }
+
+    public void setHeuristic(double heuristic) {
+        this.heuristic = heuristic;
+    }
+
     public double getFValue() {
         return fValue;
     }
 
-    public void setFValue(double fValue) {
-        this.fValue = fValue;
-    }
+    public void setFValue(double fValue) { this.fValue = fValue; }
 
     public double getGCost() {
         return gCost;

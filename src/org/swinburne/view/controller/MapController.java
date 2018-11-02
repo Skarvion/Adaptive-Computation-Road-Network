@@ -23,9 +23,11 @@ import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import org.swinburne.engine.AStarSearch;
+import javafx.util.Callback;
+import org.swinburne.engine.SearchSetting.AStarSearch;
 import org.swinburne.engine.Parser.OSMParser;
 import org.swinburne.engine.Parser.TrafficSignalCSVParser;
+import org.swinburne.engine.SearchSetting.SearchSetting;
 import org.swinburne.engine.TestCaseGenerator;
 import org.swinburne.model.Graph;
 import org.swinburne.model.Node;
@@ -41,6 +43,9 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class MapController implements Initializable {
+
+    @FXML
+    private ComboBox<SearchSetting> searchSettingCombo;
 
     @FXML
     private ScrollPane scrollPane;
@@ -96,6 +101,8 @@ public class MapController implements Initializable {
     private ObservableMap<Node, MapNode> graphNodeMap = FXCollections.observableHashMap();
     private ObservableList<MapEdge> graphEdgeObservableList = FXCollections.observableArrayList();
     private ObservableList<Line> solutionObservableList = FXCollections.observableArrayList();
+
+    private ObservableList<PropertyEntry> propertyEntries = FXCollections.observableArrayList();
 
     private Graph graph;
     private Image startPin;
@@ -153,6 +160,25 @@ public class MapController implements Initializable {
 
             initialPaneWidth = drawPane.getPrefWidth();
             initialPaneHeight = drawPane.getPrefHeight();
+
+            Callback<ListView<SearchSetting>, ListCell<SearchSetting>> cellFactory = new Callback<ListView<SearchSetting>, ListCell<SearchSetting>>() {
+                @Override
+                public ListCell<SearchSetting> call(ListView<SearchSetting> param) {
+                    return new ListCell<SearchSetting>() {
+                        @Override
+                        protected void updateItem(SearchSetting item, boolean empty) {
+                            super.updateItem(item, empty);
+                            if (item == null || empty) setGraphic(null);
+                            else setText(item.getSearchName());
+                        }
+                    };
+                }
+            };
+
+            searchSettingCombo.setCellFactory(cellFactory);
+            searchSettingCombo.setButtonCell(cellFactory.call(null));
+            searchSettingCombo.getItems().addAll(SearchSetting.getSearchSettingList());
+
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
@@ -176,11 +202,13 @@ public class MapController implements Initializable {
             return;
         }
 
+        System.out.println("Node ID: " + searchedMapNode.getNode().getId());
+        System.out.println("Ways: " + searchedMapNode.getNode().getWayArrayList().size());
+        System.out.println("Type: " + searchedMapNode.getNode().getType());
+        System.out.println("Node Heuristic: " + searchedMapNode.getNode().getHeuristic());
+
         switch (state) {
             case None:
-                System.out.println("Node ID: " + searchedMapNode.getNode().getId());
-                System.out.println("Ways: " + searchedMapNode.getNode().getWayArrayList().size());
-                System.out.println("Type: " + searchedMapNode.getNode().getType());
                 break;
             case Start:
                 selectedStartNode = searchedMapNode;
@@ -290,7 +318,7 @@ public class MapController implements Initializable {
 
     @FXML
     void generateTestCase(ActionEvent event) {
-        TestCaseGenerator generator = new TestCaseGenerator(graph, "TestCase1.csv", 10000);
+        TestCaseGenerator generator = new TestCaseGenerator(graph, "Hawthorn", 1000);
         generator.progressProperty().addListener((observable, oldValue, newValue) -> {
             statusLabel.setText("Test case: " + newValue);
         });
@@ -299,7 +327,7 @@ public class MapController implements Initializable {
         }));
 
         generator.generateTestCase();
-//        new Thread(generator).start();
+//        new Thread(generator).startNode();
     }
 
     private void redrawEdges() {
@@ -312,6 +340,17 @@ public class MapController implements Initializable {
             MapEdge mapEdge = new MapEdge(w);
             graphEdgeObservableList.add(mapEdge);
         }
+    }
+
+    private void populateProperty(Node node) {
+        propertyEntries.clear();
+
+        propertyEntries.add(new PropertyEntry("Name", node.getLabel()));
+        propertyEntries.add(new PropertyEntry("ID", node.getId()));
+        propertyEntries.add(new PropertyEntry("Latitude", Double.toString(node.getLatitude())));
+        propertyEntries.add(new PropertyEntry("Longitude", Double.toString(node.getLongitude())));
+        propertyEntries.add(new PropertyEntry("Type", node.getType().toString()));
+        propertyEntries.add(new PropertyEntry("Ways", Integer.toString(node.getWayArrayList().size())));
     }
 
     private void drawGraph() {
@@ -400,11 +439,16 @@ public class MapController implements Initializable {
         }
 
         if (closestNode != null) {
+            populateProperty(closestNode.getNode());
+
+            System.out.println("Node ID: " + closestNode.getNode().getId());
+            System.out.println("Ways: " + closestNode.getNode().getWayArrayList().size());
+            System.out.println("Type: " + closestNode.getNode().getType());
+            System.out.println("Node Heuristic: " + closestNode.getNode().getHeuristic());
+            System.out.println("NOde F Score: " + closestNode.getNode().getFValue());
+
             switch (state) {
                 case None:
-                    System.out.println("Node ID: " + closestNode.getNode().getId());
-                    System.out.println("Ways: " + closestNode.getNode().getWayArrayList().size());
-                    System.out.println("Type: " + closestNode.getNode().getType());
                     break;
                 case Start:
                     selectedStartNode = closestNode;
@@ -473,7 +517,7 @@ public class MapController implements Initializable {
                 line.setEndX(10);
                 line.setEndY(10);
 
-                line.setStroke(Color.PURPLE);
+                line.setStroke(Color.RED);
                 line.setStrokeWidth(3);
                 getChildren().add(line);
             }
@@ -552,7 +596,7 @@ public class MapController implements Initializable {
             double streetStartX = 0, streetStartY = 0, streetEndX = 0, streetEndY = 0;
             for (int i = 1; i < way.getNodeOrderedList().size(); i++) {
 //                try {
-//                    MapNode start = getMapNode(way.getNodeOrderedList().get(i));
+//                    MapNode startNode = getMapNode(way.getNodeOrderedList().get(i));
 //                } catch (IndexOutOfBoundsException ioobe) {
 //                    break;
 //                }

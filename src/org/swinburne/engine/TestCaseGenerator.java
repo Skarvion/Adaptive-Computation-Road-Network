@@ -1,6 +1,8 @@
 package org.swinburne.engine;
 
 import javafx.concurrent.Task;
+import org.swinburne.engine.SearchSetting.AStarSearch;
+import org.swinburne.engine.SearchSetting.SearchSetting;
 import org.swinburne.model.Graph;
 import org.swinburne.model.Node;
 import org.swinburne.view.controller.MapController;
@@ -9,6 +11,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Random;
 
 public class TestCaseGenerator extends Task<Integer> {
@@ -66,8 +69,12 @@ public class TestCaseGenerator extends Task<Integer> {
 
         try {
 
-            FileWriter timeOutput = new FileWriter(new File(filename + "_TIME"));
-            FileWriter distanceOutput = new FileWriter(new File(filename + "_DISTANCE"));
+            HashMap<SearchSetting, FileWriter> fileWriterMap = new HashMap<>();
+
+            for (SearchSetting se : SearchSetting.getSearchSettingList()) {
+                fileWriterMap.put(se, new FileWriter(new File(filename + se.getSearchName().toUpperCase() + ".csv")));
+                fileWriterMap.get(se).write("Test ID, Start Node ID, Destination Node ID, Straight Line Distance, Total Distance, Total Time, Traffic Signal Passed, Path Size, Visited Count, Frontier Count, Process Time (MS)\n");
+            }
 
             nodeList = new ArrayList(graph.getNodeMap().values());
 
@@ -82,7 +89,7 @@ public class TestCaseGenerator extends Task<Integer> {
 
                 Node start = nodeList.get(startIndex);
                 Node destination = nodeList.get(destinationIndex);
-//                System.out.println("Test case " + iteration + " | Start: " + start.getId() + " | " + destination.getId());
+                System.out.println("Test case " + iteration + " | Start: " + start.getId() + " | " + destination.getId());
 
                 graph.reset();
 
@@ -91,49 +98,29 @@ public class TestCaseGenerator extends Task<Integer> {
                 searchTime.computeDirectionTime(graph, start, destination);
                 searchDistance.computeDirectionDistance(graph, start, destination);
 
-                if (searchTime.isSolutionFound()) {
-                    timeOutput.write(parseResult(iteration,
-                            start.getId(),
-                            destination.getId(),
-                            searchTime.getDistanceStartFinish(),
-                            searchTime.getTotalDistance(),
-                            searchTime.getTimeTaken(),
-                            searchTime.getTrafficSignalPassed(),
-                            searchTime.getPath().size(),
-                            searchTime.getVisitedCount(),
-                            searchTime.getFrontierCount(),
-                            searchTime.getProcessTimeMS()) + "\n");
-                } else {
-                    timeOutput.write(parseEmpty(iteration, start.getId(), destination.getId()) + "\n");
-                }
-
-                if (searchDistance.isSolutionFound()) {
-                    distanceOutput.write(parseResult(iteration,
-                            start.getId(),
-                            destination.getId(),
-                            searchDistance.getDistanceStartFinish(),
-                            searchDistance.getTotalDistance(),
-                            searchDistance.getTimeTaken(),
-                            searchDistance.getTrafficSignalPassed(),
-                            searchDistance.getPath().size(),
-                            searchDistance.getVisitedCount(),
-                            searchDistance.getFrontierCount(),
-                            searchDistance.getProcessTimeMS()) + "\n");
-                } else {
-                    distanceOutput.write(parseEmpty(iteration, start.getId(), destination.getId()) + "\n");
-                }
-
-                if (searchDistance.isSolutionFound() && !searchTime.isSolutionFound()) {
-                    System.out.println("Woops, distance found solution!");
-                } else if (!searchDistance.isSolutionFound() && searchTime.isSolutionFound()) {
-                    System.out.println("Whoa, time found solution!");
+                for (SearchSetting se : SearchSetting.getSearchSettingList()) {
+                    se.computeDirection(graph, start, destination);
+                    if (searchTime.isSolutionFound()) {
+                        fileWriterMap.get(se).write(parseResult(iteration,
+                                start.getId(),
+                                destination.getId(),
+                                searchTime.getDistanceStartFinish(),
+                                searchTime.getTotalDistance(),
+                                searchTime.getTimeTaken(),
+                                searchTime.getTrafficSignalPassed(),
+                                searchTime.getPath().size(),
+                                searchTime.getVisitedCount(),
+                                searchTime.getFrontierCount(),
+                                searchTime.getProcessTimeMS()) + "\n");
+                    } else {
+                        fileWriterMap.get(se).write(parseEmpty(iteration, start.getId(), destination.getId()) + "\n");
+                    }
                 }
 //                updateMessage("Test case " + iteration + "\n" + search.toString());
 //                updateProgress(iteration, startID + testCase);
             }
 
-            timeOutput.close();
-            distanceOutput.close();
+            for (FileWriter fw : fileWriterMap.values()) fw.close();
 
             System.out.println("Test case generation done");
 

@@ -1,32 +1,35 @@
 package org.swinburne.engine;
 
 import org.swinburne.engine.HeuristicSetting.HeuristicSetting;
-import org.swinburne.engine.HeuristicSetting.StraightLineDistance;
 import org.swinburne.model.Graph;
 import org.swinburne.model.Node;
 
-import java.util.ArrayList;
+import java.util.HashSet;
 
 public class HeuristicEngine {
 
-    private static ArrayList<HeuristicSetting> settingList = new ArrayList<>();
+    private static HashSet<HeuristicSetting> settingList = new HashSet<>();
 
     private static HeuristicSetting selectedHeuristic;
 
-    static {
-        settingList.add(new StraightLineDistance());
-
-        selectedHeuristic = settingList.get(0);
+    public static boolean generateHeuristic(String heuristicName, Graph graph, Node start, Node destination) {
+        for (HeuristicSetting he : settingList) {
+            if (he.isID(heuristicName)) {
+                selectedHeuristic = he;
+                return generateHeuristic(graph, start, destination);
+            }
+        }
+        return false;
     }
 
-    public static void generateHeuristic(Graph graph, Node destination) {
-        for (Node n : graph.getNodeMap().values()) {
-            if (n == destination) continue;
-            calculateHeuristic(graph, n, destination);
+    public static boolean generateHeuristic(Graph graph, Node start, Node destination) {
+        try {
+            selectedHeuristic.generateHeuristic(graph, start, destination);
+            return true;
+        } catch (NullPointerException npe) {
+            throw new IllegalStateException("Heuristic setting has not been selected yet! Cannot proceed");
         }
     }
 
-    private static double calculateHeuristic(Graph graph, Node node, Node destination) {
-        return selectedHeuristic.calculateHeuristic(graph, node, destination);
-    }
+    public static boolean addHeuristicSetting(HeuristicSetting heuristicSetting) { return settingList.add(heuristicSetting); }
 }

@@ -1,5 +1,7 @@
 package org.swinburne.model.Tree;
 
+import org.swinburne.model.Way;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -9,6 +11,9 @@ public class TreeNode<T> {
     private TreeNode<T> parent;
     private HashMap<String, Double> metaData = new HashMap<>();
     private ArrayList<TreeNode<T>> children = new ArrayList<>();
+
+    //@TODO: fix this one later
+    private Way way;
 
     private double cost; // in term of distance (for now)
     private double heuristic;
@@ -119,5 +124,13 @@ public class TreeNode<T> {
 
     public void setgScore(double gScore) {
         this.gScore = gScore;
+    }
+
+    public Way getWay() {
+        return way;
+    }
+
+    public void setWay(Way way) {
+        this.way = way;
     }
 }

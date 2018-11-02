@@ -1,5 +1,8 @@
-package org.swinburne.engine;
+package org.swinburne.engine.SearchSetting;
 
+import org.swinburne.engine.FScoreComparator;
+import org.swinburne.engine.HeuristicEngine;
+import org.swinburne.engine.HeuristicSetting.TimeHeuristic;
 import org.swinburne.model.Way;
 import org.swinburne.model.Graph;
 import org.swinburne.model.Node;
@@ -47,14 +50,11 @@ public class AStarSearch {
         startTime = System.nanoTime();
 
         try {
-
-            HeuristicEngine.generateHeuristic(graph, destination);
-
+            new TimeHeuristic().generateHeuristic(graph, start, destination);
             path = new ArrayList<>();
             PriorityQueue<Node> frontiers = new PriorityQueue<Node>(50, new FScoreComparator());
 
             Node rootNode = start;
-//        Tree<Node> tree = new Tree<Node>(rootNode);
 
             ArrayList<Node> visited = new ArrayList<>();
 
@@ -72,11 +72,7 @@ public class AStarSearch {
                 }
                 visitedCount++;
                 visited.add(selectedNode);
-//                System.out.println("Visit " + test++);
-
                 for (Way w : selectedNode.getWayArrayList()) {
-
-//                    System.out.println("Way " + test++);
                     Node[] adjacentNodes = w.getAdjacents(selectedNode);
                     if (adjacentNodes == null) {
                         continue;
@@ -107,17 +103,6 @@ public class AStarSearch {
                             frontiers.add(n);
                             frontierCount++;
                         }
-
-//                    if (treeNode.getObject().getWayArrayList().size() > 1) {
-//                        intersection = true;
-//                        trafficSignalPassed++;
-//                    }
-
-//                    treeNode.setTime(selectedNode.getTime() + timeS + (intersection ? 30 : 0));
-//                    treeNode.setDistance(selectedNode.getDistance() + distance);
-//                    treeNode.setCost(selectedNode.getCost() + distance + n.getFValue());
-
-//                    treeNode.putMetaData("time", calculateTravelTime(w, selectedNode.getMetaData("time")) + (intersection ? 30 : 0));
 
                         if (mapTask != null) {
                             Node tn = selectedNode;
@@ -154,7 +139,7 @@ public class AStarSearch {
 
         try {
 
-            HeuristicEngine.generateHeuristic(graph, destination);
+            new TimeHeuristic().generateHeuristic(graph, start, destination);
 
             path = new ArrayList<>();
             PriorityQueue<Node> frontiers = new PriorityQueue<Node>(50, new FScoreComparator());
@@ -169,7 +154,6 @@ public class AStarSearch {
 
             frontiers.add(rootNode);
 
-            int test = 0;
             Node selectedNode;
             while ((selectedNode = frontiers.poll()) != null) {
                 if (selectedNode == destination) {
@@ -184,8 +168,6 @@ public class AStarSearch {
                     if (adjacentNodes == null) {
                         continue;
                     }
-
-                double speedLimitS = UnitConverter.kmhToMs(w.getSpeedLimitKmh());
                     for (Node n : adjacentNodes) {
                         if (visited.contains(n)) continue;
 
@@ -200,29 +182,15 @@ public class AStarSearch {
                         selectedNode.addChild(n);
 
                         double distanceToGoal = UnitConverter.geopositionDistance(n.getLatitude(), n.getLongitude(), destination.getLatitude(), destination.getLongitude());
-//                        double timeToGoal = distanceToGoal / UnitConverter.kmhToMs(50);
 
                         n.setGCost(totalGScore);
                         n.setFValue(n.getGCost() + distanceToGoal);
                         n.setTimeTravelled(selectedNode.getTimeTravelled() + timeTraversed);
 
-//                        System.out.println("Node " + test++);
-
                         if (!contained) {
                             frontiers.add(n);
                             frontierCount++;
                         }
-
-//                    if (treeNode.getObject().getWayArrayList().size() > 1) {
-//                        intersection = true;
-//                        trafficSignalPassed++;
-//                    }
-
-//                    treeNode.setTime(selectedNode.getTime() + timeS + (intersection ? 30 : 0));
-//                    treeNode.setDistance(selectedNode.getDistance() + distance);
-//                    treeNode.setCost(selectedNode.getCost() + distance + n.getFValue());
-
-//                    treeNode.putMetaData("time", calculateTravelTime(w, selectedNode.getMetaData("time")) + (intersection ? 30 : 0));
 
                         if (mapTask != null) {
                             Node tn = selectedNode;

@@ -11,9 +11,7 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.File;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class OSMParser {
     public static Graph parseFromOSM(File file) {
@@ -122,6 +120,8 @@ public class OSMParser {
                 }
             }
 
+            sanitizeNode(graph);
+
             Date end = new Date();
             System.out.println("End: " + sdf.format(end));
 
@@ -130,6 +130,62 @@ public class OSMParser {
         }
 
         return graph;
+    }
+
+    private static void sanitizeNode(Graph graph) {
+        Set<Node> visited = new HashSet<>();
+
+        ArrayList<Node> graphNodeArray = new ArrayList<>(graph.getNodeMap().values());
+
+        System.out.println("Total nodes: " + graphNodeArray.size());
+
+        ArrayList<Node> mostCount = new ArrayList<>();
+
+        int total = 0;
+        while (!graphNodeArray.isEmpty()) {
+            ArrayList<Node> toRemove = new ArrayList<>();
+            Node checkedNode = graphNodeArray.get(0);
+            if (visited.contains(checkedNode)) continue;
+
+            ArrayList<Node> currentCount = new ArrayList<>();
+            Node selectedNode;
+            LinkedList<Node> frontier = new LinkedList<>();
+
+            frontier.add(checkedNode);
+
+            while ((selectedNode = frontier.pollLast()) != null) {
+                toRemove.add(selectedNode);
+                currentCount.add(selectedNode);
+                graphNodeArray.remove(selectedNode);
+                visited.add(selectedNode);
+
+                for (Way w : selectedNode.getWayArrayList()) {
+                    for (Node n : w.getAdjacents(selectedNode)) {
+                        if (visited.contains(n)) continue;
+
+                        frontier.add(n);
+                    }
+                }
+            }
+
+            if (mostCount == null) {
+                mostCount = currentCount;
+                continue;
+            }
+
+            if (currentCount.size() > mostCount.size()) {
+                for (Node countNode : mostCount) {
+                    graph.getNodeMap().remove(countNode.getId());
+                }
+                mostCount = currentCount;
+            } else {
+                for (Node countNode : currentCount) {
+                    graph.getNodeMap().remove(countNode.getId());
+                }
+            }
+
+            graphNodeArray.removeAll(toRemove);
+        }
     }
 
     private static Map<String, String> getTagList(Element element) {
