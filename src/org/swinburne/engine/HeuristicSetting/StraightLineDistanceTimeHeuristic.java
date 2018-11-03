@@ -3,6 +3,7 @@ package org.swinburne.engine.HeuristicSetting;
 import org.swinburne.engine.HeuristicEngine;
 import org.swinburne.model.Graph;
 import org.swinburne.model.Node;
+import org.swinburne.model.NodeType;
 import org.swinburne.util.UnitConverter;
 
 public class StraightLineDistanceTimeHeuristic extends HeuristicSetting {
@@ -22,10 +23,16 @@ public class StraightLineDistanceTimeHeuristic extends HeuristicSetting {
     @Override
     protected boolean processHeuristic(Graph graph, Node start, Node destination) {
         for (Node n : graph.getNodeMap().values()) {
-            if (n == destination) continue;
+            if (n == destination) {
+                n.setHeuristic(0);
+                continue;
+            }
 
             double d = UnitConverter.geopositionDistance(n.getLatitude(), n.getLongitude(), destination.getLatitude(), destination.getLongitude());
             d /= UnitConverter.kmhToMs(50);
+
+            if (n.getType() == NodeType.Intersection) d += HeuristicSetting.AVERAGE_INTERSECTION_TIME;
+
             n.setHeuristic(d);
         }
 

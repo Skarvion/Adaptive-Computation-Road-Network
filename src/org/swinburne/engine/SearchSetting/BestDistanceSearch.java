@@ -1,10 +1,10 @@
 package org.swinburne.engine.SearchSetting;
 
-import org.swinburne.engine.FScoreComparator;
-import org.swinburne.engine.HeuristicSetting.PathDistanceHeuristic;
-import org.swinburne.engine.HeuristicSetting.TimeHeuristic;
+import org.swinburne.engine.FScoreTreeComparator;
+import org.swinburne.engine.HeuristicSetting.StraightLineDistanceHeuristic;
 import org.swinburne.model.Graph;
 import org.swinburne.model.Node;
+import org.swinburne.model.Tree.TreeNode;
 import org.swinburne.model.Way;
 import org.swinburne.util.UnitConverter;
 
@@ -28,24 +28,24 @@ public class BestDistanceSearch extends SearchSetting {
         startTime = System.nanoTime();
 
         try {
-            new PathDistanceHeuristic().generateHeuristic(graph, start, destination);
+            new StraightLineDistanceHeuristic().generateHeuristic(graph, start, destination);
             path = new ArrayList<>();
-            PriorityQueue<Node> frontiers = new PriorityQueue<Node>(50, new FScoreComparator());
+            PriorityQueue<TreeNode<Node>> frontiers = new PriorityQueue<>(50, new FScoreTreeComparator());
 
-            Node rootNode = start;
+            TreeNode<Node> rootNode = new TreeNode<>(start);
 
             ArrayList<Node> visited = new ArrayList<>();
 
-            rootNode.setGCost(0);
-            rootNode.setFValue(rootNode.getHeuristic());
+            rootNode.getObject().setGCost(0);
+            rootNode.getObject().setFValue(rootNode.getHeuristic());
 
             frontiers.add(rootNode);
 
-            Node selectedNode;
-
-            while ((selectedNode = frontiers.poll()) != null) {
+            TreeNode<Node> selectedTreeNode;
+            while ((selectedTreeNode = frontiers.poll()) != null) {
+                Node selectedNode = selectedTreeNode.getObject();
                 if (selectedNode == destination) {
-                    deriveSolution(selectedNode);
+                    deriveSolution(selectedTreeNode);
                     return;
                 }
                 visitedCount++;
@@ -60,27 +60,25 @@ public class BestDistanceSearch extends SearchSetting {
                     for (Node n : adjacentNodes) {
                         if (visited.contains(n)) continue;
 
-                        double timeTraversed = UnitConverter.geopositionDistance(selectedNode.getLatitude(), selectedNode.getLongitude(), n.getLatitude(), n.getLongitude()) / w.getSpeedLimitKmh();
-                        double totalGScore = selectedNode.getGCost();
+                        double distanceTravelled = UnitConverter.geopositionDistance(selectedNode.getLatitude(), selectedNode.getLongitude(), n.getLatitude(), n.getLongitude());
+                        double totalGScore = selectedNode.getGCost() + distanceTravelled;
 
                         boolean contained = true;
                         if (!frontiers.contains(n)) contained = false;
                         else if (totalGScore >= n.getGCost()) continue;
 
-                        n.setParent(selectedNode);
-                        selectedNode.addChild(n);
+                        TreeNode<Node> newTreeNode = new TreeNode<>(n);
+
+                        newTreeNode.setWay(w);
+                        selectedTreeNode.addChild(newTreeNode);
+                        newTreeNode.setTime(selectedTreeNode.getTime() + distanceTravelled / w.getSpeedLimitKmh());
+                        newTreeNode.setDistance(selectedTreeNode.getDistance() + distanceTravelled);
 
                         n.setGCost(totalGScore);
                         n.setFValue(n.getGCost() + n.getHeuristic());
-                        n.setTimeTravelled(selectedNode.getTimeTravelled() + timeTraversed);
 
                         if (!contained) {
-                            frontiers.add(n);
-                            frontierCount++;
-                        }
-
-                        if (!contained) {
-                            frontiers.add(n);
+                            frontiers.add(newTreeNode);
                             frontierCount++;
                         }
 
@@ -94,18 +92,18 @@ public class BestDistanceSearch extends SearchSetting {
     }
 
     @Override
-    protected ArrayList<Node> deriveSolution(Node destination) {
+    protected ArrayList<Node> deriveSolution(TreeNode<Node> destination) {
         long endTime = System.nanoTime();
         processTimeMS = (endTime - startTime) / 1000000;
 
         ArrayList<Node> result = new ArrayList<>();
-        Node selectedTreeNode = destination;
-        timeTaken = destination.getGCost();
-        totalDistance = 0;
+        TreeNode<Node> selectedTreeNode = destination;
+        timeTaken = destination.getTime();
+        totalDistance = destination.getDistance();
         while (selectedTreeNode != null) {
-            result.add(selectedTreeNode);
+            result.add(selectedTreeNode.getObject());
             if (selectedTreeNode.getParent() != null) {
-                totalDistance += UnitConverter.geopositionDistance(selectedTreeNode, selectedTreeNode.getParent());
+                totalDistance += UnitConverter.geopositionDistance(selectedTreeNode.getObject(), selectedTreeNode.getParent().getObject());
             }
             selectedTreeNode = selectedTreeNode.getParent();
         }

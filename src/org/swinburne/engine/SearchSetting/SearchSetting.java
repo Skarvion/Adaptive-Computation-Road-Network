@@ -2,18 +2,21 @@ package org.swinburne.engine.SearchSetting;
 
 import org.swinburne.model.Graph;
 import org.swinburne.model.Node;
+import org.swinburne.model.Tree.TreeNode;
 import org.swinburne.view.controller.MapController;
 
 import java.util.ArrayList;
 
 public abstract class SearchSetting {
+    public static final double AVERAGE_TURNING_TIME = 5;
+
     private static ArrayList<SearchSetting> searchSettingList = new ArrayList<>();
 
     static {
         searchSettingList.add(new BestTimeSearch());
         searchSettingList.add(new BestDistanceSearch());
-        searchSettingList.add(new BestTimeSLDSearch());
-        searchSettingList.add(new BestDistanceSLDSearch());
+//        searchSettingList.add(new BestTimeSLDSearch());
+//        searchSettingList.add(new BestDistanceSLDSearch());
     }
 
     protected ArrayList<String> ids = new ArrayList<>();
@@ -37,7 +40,7 @@ public abstract class SearchSetting {
 
     protected int trafficSignalPassed = 0;
 
-    protected MapController.SearchTask mapTask;
+    protected MapController.SearchTask mapTask = null;
     protected MapController mapController = null;
 
     public SearchSetting(String name, String[] ids) {
@@ -70,7 +73,7 @@ public abstract class SearchSetting {
     }
 
     public abstract void computeDirection(Graph graph, Node start, Node destination);
-    protected abstract ArrayList<Node> deriveSolution(Node destination);
+    protected abstract ArrayList<Node> deriveSolution(TreeNode<Node> destination);
 
     public static ArrayList<SearchSetting> getSearchSettingList() { return searchSettingList; }
 

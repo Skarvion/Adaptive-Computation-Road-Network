@@ -2,6 +2,7 @@ package org.swinburne.view.controller;
 
 import javafx.application.Platform;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.ObservableMap;
@@ -13,6 +14,7 @@ import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
@@ -24,7 +26,6 @@ import javafx.scene.shape.Line;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Callback;
-import org.swinburne.engine.SearchSetting.AStarSearch;
 import org.swinburne.engine.Parser.OSMParser;
 import org.swinburne.engine.Parser.TrafficSignalCSVParser;
 import org.swinburne.engine.SearchSetting.SearchSetting;
@@ -179,6 +180,10 @@ public class MapController implements Initializable {
             searchSettingCombo.setButtonCell(cellFactory.call(null));
             searchSettingCombo.getItems().addAll(SearchSetting.getSearchSettingList());
 
+            propertiesTableView.setItems(propertyEntries);
+            keyTableCol.setCellValueFactory(new PropertyValueFactory<>("key"));
+            valueTableCol.setCellValueFactory(new PropertyValueFactory<>("value"));
+
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
@@ -276,6 +281,8 @@ public class MapController implements Initializable {
     private void calculateAction(ActionEvent event) {
         if (selectedStartNode == null || selectedFinishNode == null) return;
 
+        if (searchSettingCombo.getValue() == null) return;
+
         graph.reset();
         drawPane.getChildren().removeAll(solutionObservableList);
         solutionObservableList.clear();
@@ -284,7 +291,7 @@ public class MapController implements Initializable {
         scrollPane.setVvalue(scrollPane.getVvalue() / 2);
 
         ArrayList<Node> searchPath = new ArrayList<>();
-        new Thread(new SearchTask(searchPath)).start();
+        new Thread(new SearchTask(searchPath, searchSettingCombo.getValue())).start();
     }
 
     @FXML
@@ -351,6 +358,9 @@ public class MapController implements Initializable {
         propertyEntries.add(new PropertyEntry("Longitude", Double.toString(node.getLongitude())));
         propertyEntries.add(new PropertyEntry("Type", node.getType().toString()));
         propertyEntries.add(new PropertyEntry("Ways", Integer.toString(node.getWayArrayList().size())));
+        propertyEntries.add(new PropertyEntry("F Score", node.getFValue() == Double.MAX_VALUE ? "UNDEFINED" : Double.toString(node.getFValue())));
+        propertyEntries.add(new PropertyEntry("G Cost", node.getGCost() == Double.MAX_VALUE ? "UNDEFINED" : Double.toString(node.getGCost())));
+        propertyEntries.add(new PropertyEntry("Heuristic", node.getHeuristic() == Double.MAX_VALUE ? "UNDEFINED" : Double.toString(node.getHeuristic())));
     }
 
     private void drawGraph() {
@@ -676,19 +686,20 @@ public class MapController implements Initializable {
     public class SearchTask extends Task<Void> {
 
         private ArrayList<Node> resultPath;
+        private SearchSetting searchSetting;
 
-        private SearchTask(ArrayList<Node> resultPath) {
+        private SearchTask(ArrayList<Node> resultPath, SearchSetting searchSetting) {
             this.resultPath = resultPath;
+            this.searchSetting = searchSetting;
         }
 
         @Override
         protected Void call() throws Exception {
-            AStarSearch search = new AStarSearch();
-            search.setMapController(this);
-            search.computeDirectionDistance(graph, selectedStartNode.getNode(), selectedFinishNode.getNode());
+            searchSetting.setMapController(this);
+            searchSetting.computeDirection(graph, selectedStartNode.getNode(), selectedFinishNode.getNode());
 
             resultPath.clear();
-            resultPath.addAll(search.getPath());
+            resultPath.addAll(searchSetting.getPath());
             if (resultPath.size() == 0) {
                 System.out.println("Test is null?");
                 return null;
@@ -701,9 +712,9 @@ public class MapController implements Initializable {
                 if (found != null) foundMapNode.add(found);
             }
 
-            System.out.println("Distance travelled: " + search.getTotalDistance());
-            System.out.println("Time taken: " + search.getTimeTaken());
-            System.out.println("Intersection passed: " + search.getTrafficSignalPassed());
+            System.out.println("Distance travelled: " + searchSetting.getTotalDistance());
+            System.out.println("Time taken: " + searchSetting.getTimeTaken());
+            System.out.println("Intersection passed: " + searchSetting.getTrafficSignalPassed());
 
             String path = "";
             for (Node n : resultPath) {
@@ -791,29 +802,37 @@ public class MapController implements Initializable {
         }
     }
 
-    private class PropertyEntry {
-        private String key;
-        private String value;
+    public class PropertyEntry {
+        private SimpleStringProperty key;
+        private SimpleStringProperty value;
 
         public PropertyEntry(String key, String value) {
-            this.key = key;
-            this.value = value;
+            this.key = new SimpleStringProperty(key);
+            this.value = new SimpleStringProperty(value);
         }
 
         public String getKey() {
-            return key;
+            return key.getValue();
         }
 
         public void setKey(String key) {
-            this.key = key;
+            this.key.set(key);
         }
 
         public String getValue() {
-            return value;
+            return value.getValue();
         }
 
         public void setValue(String value) {
-            this.value = value;
+            this.value.set(value);
+        }
+
+        public SimpleStringProperty keyProperty() {
+            return key;
+        }
+
+        public SimpleStringProperty valueProperty() {
+            return value;
         }
     }
 }

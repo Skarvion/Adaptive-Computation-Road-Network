@@ -1,9 +1,11 @@
 package org.swinburne.engine.SearchSetting;
 
-import org.swinburne.engine.FScoreComparator;
+import org.swinburne.engine.FScoreTreeComparator;
+import org.swinburne.engine.HeuristicSetting.StraightLineDistanceTimeHeuristic;
 import org.swinburne.engine.HeuristicSetting.TimeHeuristic;
 import org.swinburne.model.Graph;
 import org.swinburne.model.Node;
+import org.swinburne.model.Tree.TreeNode;
 import org.swinburne.model.Way;
 import org.swinburne.util.UnitConverter;
 
@@ -28,25 +30,25 @@ public class BestTimeSearch extends SearchSetting {
         startTime = System.nanoTime();
 
         try {
-            new TimeHeuristic().generateHeuristic(graph, start, destination);
+            new StraightLineDistanceTimeHeuristic().generateHeuristic(graph, start, destination);
             path = new ArrayList<>();
-            PriorityQueue<Node> frontiers = new PriorityQueue<Node>(50, new FScoreComparator());
+            PriorityQueue<TreeNode<Node>> frontiers = new PriorityQueue<>(50, new FScoreTreeComparator());
 
-            Node rootNode = start;
+            TreeNode<Node> rootNode = new TreeNode<>(start);
 
             ArrayList<Node> visited = new ArrayList<>();
 
-            rootNode.setGCost(0);
-            rootNode.setFValue(rootNode.getHeuristic());
+            rootNode.getObject().setGCost(0);
+            rootNode.getObject().setFValue(rootNode.getHeuristic());
 
             frontiers.add(rootNode);
 
-            int test = 0;
-            Node selectedNode;
+            TreeNode<Node> selectedTreeNode;
+            while ((selectedTreeNode = frontiers.poll()) != null) {
+                Node selectedNode = selectedTreeNode.getObject();
 
-            while ((selectedNode = frontiers.poll()) != null) {
                 if (selectedNode == destination) {
-                    deriveSolution(selectedNode);
+                    deriveSolution(selectedTreeNode);
                     return;
                 }
                 visitedCount++;
@@ -64,12 +66,16 @@ public class BestTimeSearch extends SearchSetting {
                         double timeTraversed = UnitConverter.geopositionDistance(selectedNode.getLatitude(), selectedNode.getLongitude(), n.getLatitude(), n.getLongitude()) / UnitConverter.kmhToMs(w.getSpeedLimitKmh());
                         double totalGScore = selectedNode.getGCost() + timeTraversed;
 
+                        if (selectedTreeNode.getWay() != null && selectedTreeNode.getWay() != w) totalGScore += SearchSetting.AVERAGE_TURNING_TIME;
+
                         boolean contained = true;
                         if (!frontiers.contains(n)) contained = false;
                         else if (totalGScore >= n.getGCost()) continue;
 
-                        n.setParent(selectedNode);
-                        selectedNode.addChild(n);
+                        TreeNode<Node> newTreeNode = new TreeNode<>(n);
+
+                        newTreeNode.setWay(w);
+                        selectedTreeNode.addChild(newTreeNode);
 
                         double distanceToGoal = UnitConverter.geopositionDistance(n.getLatitude(), n.getLongitude(), destination.getLatitude(), destination.getLongitude());
                         double timeToGoal = distanceToGoal / UnitConverter.kmhToMs(50);
@@ -78,7 +84,7 @@ public class BestTimeSearch extends SearchSetting {
                         n.setFValue(n.getGCost() + n.getHeuristic());
 
                         if (!contained) {
-                            frontiers.add(n);
+                            frontiers.add(newTreeNode);
                             frontierCount++;
                         }
 
@@ -92,18 +98,18 @@ public class BestTimeSearch extends SearchSetting {
     }
 
     @Override
-    protected ArrayList<Node> deriveSolution(Node destination) {
+    protected ArrayList<Node> deriveSolution(TreeNode<Node> destination) {
         long endTime = System.nanoTime();
         processTimeMS = (endTime - startTime) / 1000000;
 
         ArrayList<Node> result = new ArrayList<>();
-        Node selectedTreeNode = destination;
-        timeTaken = destination.getGCost();
+        TreeNode<Node> selectedTreeNode = destination;
+        timeTaken = destination.getObject().getGCost();
         totalDistance = 0;
         while (selectedTreeNode != null) {
-            result.add(selectedTreeNode);
+            result.add(selectedTreeNode.getObject());
             if (selectedTreeNode.getParent() != null) {
-                totalDistance += UnitConverter.geopositionDistance(selectedTreeNode, selectedTreeNode.getParent());
+                totalDistance += UnitConverter.geopositionDistance(selectedTreeNode.getObject(), selectedTreeNode.getParent().getObject());
             }
             selectedTreeNode = selectedTreeNode.getParent();
         }

@@ -7,6 +7,8 @@ import java.util.ArrayList;
 
 public abstract class HeuristicSetting {
 
+    public static final double AVERAGE_INTERSECTION_TIME = 20;
+
     protected ArrayList<String> idList = new ArrayList<>();
 
     protected long startTime;
