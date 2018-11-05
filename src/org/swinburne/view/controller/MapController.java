@@ -545,7 +545,10 @@ public class MapController implements Initializable {
             });
         }
 
-        public void setText(String text) { label.setText(text); }
+        public void setText(String text) {
+            label.setText(text);
+            label.toFront();
+        }
 
         public void redraw() {
             label.setText(node.getLabel());
@@ -636,6 +639,7 @@ public class MapController implements Initializable {
                 line.setStrokeWidth(STROKE_WIDTH);
 
                 drawPane.getChildren().add(line);
+                line.toBack();
 
                 lineArrayList.add(line);
             }
@@ -767,6 +771,8 @@ public class MapController implements Initializable {
 
                     drawPane.getChildren().add(line);
                     solutionObservableList.add(line);
+
+                    sourceMapNode.setText(Double.toString(source.getFValue()));
                 });
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -796,6 +802,7 @@ public class MapController implements Initializable {
 
                 drawPane.getChildren().add(line);
                 solutionObservableList.add(line);
+                line.toBack();
             });
         } catch (InterruptedException e) {
             e.printStackTrace();

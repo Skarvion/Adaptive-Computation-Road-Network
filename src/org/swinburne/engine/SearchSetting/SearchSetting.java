@@ -1,5 +1,6 @@
 package org.swinburne.engine.SearchSetting;
 
+import org.swinburne.engine.HeuristicSetting.HeuristicSetting;
 import org.swinburne.model.Graph;
 import org.swinburne.model.Node;
 import org.swinburne.model.Tree.TreeNode;
@@ -9,6 +10,7 @@ import java.util.ArrayList;
 
 public abstract class SearchSetting {
     public static final double AVERAGE_TURNING_TIME = 5;
+    public static final double AVERAGE_INTERSECTION_TIME = 20;
 
     private static ArrayList<SearchSetting> searchSettingList = new ArrayList<>();
 
@@ -21,6 +23,8 @@ public abstract class SearchSetting {
 
     protected ArrayList<String> ids = new ArrayList<>();
     protected String name;
+
+    protected HeuristicSetting heuristic;
 
     protected ArrayList<Node> path = new ArrayList<>();
     protected boolean solutionFound = false;
@@ -56,6 +60,9 @@ public abstract class SearchSetting {
     }
 
     protected void resetSearch() {
+        this.solutionFound = false;
+        this.path = new ArrayList<>();
+
         this.startNode = null;
         this.destinationNode = null;
 
@@ -78,8 +85,8 @@ public abstract class SearchSetting {
     public static ArrayList<SearchSetting> getSearchSettingList() { return searchSettingList; }
 
     protected boolean drawFrontier(Node firstNode, Node secondNode) {
-        if (mapController != null) {
-            mapController.drawFrontier(firstNode, secondNode);
+        if (mapTask != null) {
+            mapTask.drawFrontier(firstNode, secondNode);
             return true;
         } else return false;
     }

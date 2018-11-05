@@ -1,7 +1,6 @@
 package org.swinburne.engine.SearchSetting;
 
 import org.swinburne.engine.FScoreComparator;
-import org.swinburne.engine.HeuristicSetting.PathDistanceHeuristic;
 import org.swinburne.engine.HeuristicSetting.StraightLineDistanceHeuristic;
 import org.swinburne.model.Graph;
 import org.swinburne.model.Node;

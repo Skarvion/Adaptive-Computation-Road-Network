@@ -16,8 +16,8 @@ public class Node {
     private double gCost;
     private double timeTravelled = 0;
 
-    private Node parent = null;
-    private ArrayList<Node> childrenList = new ArrayList<>();
+    private ArrayList<Way> wayArrayList = new ArrayList<>();
+    private Map<String, String> metadata = new HashMap<>();
 
     public Node() {
 
@@ -27,10 +27,6 @@ public class Node {
         this.latitude = latitude;
         this.longitude = longitude;
     }
-
-    private ArrayList<Way> wayArrayList = new ArrayList<>();
-
-    private Map<String, Float> metadata = new HashMap<>();
 
     public String getId() {
         return id;
@@ -100,20 +96,6 @@ public class Node {
         this.type = type;
     }
 
-    public Node getParent() {
-        return parent;
-    }
-
-    public void setParent(Node parent) {
-        this.parent = parent;
-    }
-
-    public boolean addChild(Node child) {
-        return this.childrenList.add(child);
-    }
-
-    public ArrayList<Node> getChildren() { return this.childrenList; }
-
     public double getTimeTravelled() {
         return timeTravelled;
     }
@@ -121,4 +103,8 @@ public class Node {
     public void setTimeTravelled(double timeTravelled) {
         this.timeTravelled = timeTravelled;
     }
+
+    public String putMetadata(String key, String value) { return this.metadata.put(key, value); }
+
+    public String putMetadata(String key, double value) { return this.metadata.put(key, Double.toString(value)); }
 }

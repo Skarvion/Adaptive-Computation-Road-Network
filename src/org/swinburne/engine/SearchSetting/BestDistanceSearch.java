@@ -4,6 +4,7 @@ import org.swinburne.engine.FScoreTreeComparator;
 import org.swinburne.engine.HeuristicSetting.StraightLineDistanceHeuristic;
 import org.swinburne.model.Graph;
 import org.swinburne.model.Node;
+import org.swinburne.model.NodeType;
 import org.swinburne.model.Tree.TreeNode;
 import org.swinburne.model.Way;
 import org.swinburne.util.UnitConverter;
@@ -15,6 +16,7 @@ import java.util.PriorityQueue;
 public class BestDistanceSearch extends SearchSetting {
     public BestDistanceSearch() {
         super("Best Distance Search", new String[]{"bestDistance", "distance", "length"});
+        heuristic = new StraightLineDistanceHeuristic();
     }
 
     @Override
@@ -28,7 +30,6 @@ public class BestDistanceSearch extends SearchSetting {
         startTime = System.nanoTime();
 
         try {
-            new StraightLineDistanceHeuristic().generateHeuristic(graph, start, destination);
             path = new ArrayList<>();
             PriorityQueue<TreeNode<Node>> frontiers = new PriorityQueue<>(50, new FScoreTreeComparator());
 
@@ -37,7 +38,7 @@ public class BestDistanceSearch extends SearchSetting {
             ArrayList<Node> visited = new ArrayList<>();
 
             rootNode.getObject().setGCost(0);
-            rootNode.getObject().setFValue(rootNode.getHeuristic());
+            rootNode.getObject().setFValue(heuristic.calculateHeuristic(graph, start, start, destination));
 
             frontiers.add(rootNode);
 
@@ -61,6 +62,10 @@ public class BestDistanceSearch extends SearchSetting {
                         if (visited.contains(n)) continue;
 
                         double distanceTravelled = UnitConverter.geopositionDistance(selectedNode.getLatitude(), selectedNode.getLongitude(), n.getLatitude(), n.getLongitude());
+                        double timeTraversed = distanceTravelled / UnitConverter.kmhToMs(w.getSpeedLimitKmh());
+
+                        if (n.getType() == NodeType.Intersection) timeTraversed += AVERAGE_INTERSECTION_TIME;
+                        if (selectedTreeNode.getWay() != null && selectedTreeNode.getWay() != w) timeTraversed+= SearchSetting.AVERAGE_TURNING_TIME;
                         double totalGScore = selectedNode.getGCost() + distanceTravelled;
 
                         boolean contained = true;
@@ -71,11 +76,11 @@ public class BestDistanceSearch extends SearchSetting {
 
                         newTreeNode.setWay(w);
                         selectedTreeNode.addChild(newTreeNode);
-                        newTreeNode.setTime(selectedTreeNode.getTime() + distanceTravelled / w.getSpeedLimitKmh());
+                        newTreeNode.setTime(selectedTreeNode.getTime() + timeTraversed);
                         newTreeNode.setDistance(selectedTreeNode.getDistance() + distanceTravelled);
 
                         n.setGCost(totalGScore);
-                        n.setFValue(n.getGCost() + n.getHeuristic());
+                        n.setFValue(n.getGCost() + heuristic.calculateHeuristic(graph, n, start, destination));
 
                         if (!contained) {
                             frontiers.add(newTreeNode);

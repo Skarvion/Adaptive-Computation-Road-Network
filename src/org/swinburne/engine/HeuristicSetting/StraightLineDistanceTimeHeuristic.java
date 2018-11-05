@@ -21,21 +21,25 @@ public class StraightLineDistanceTimeHeuristic extends HeuristicSetting {
     //    Reference: https://bigdatanerd.wordpress.com/2011/11/03/java-implementation-of-haversine-formula-for-distance-calculation-between-two-points/
     //    Using haversine calculation
     @Override
-    protected boolean processHeuristic(Graph graph, Node start, Node destination) {
+    protected boolean processGraphHeuristic(Graph graph, Node start, Node destination) {
         for (Node n : graph.getNodeMap().values()) {
             if (n == destination) {
                 n.setHeuristic(0);
                 continue;
             }
 
-            double d = UnitConverter.geopositionDistance(n.getLatitude(), n.getLongitude(), destination.getLatitude(), destination.getLongitude());
-            d /= UnitConverter.kmhToMs(50);
+            double d = calculateHeuristic(graph, n, start, destination);
 
-            if (n.getType() == NodeType.Intersection) d += HeuristicSetting.AVERAGE_INTERSECTION_TIME;
+//            if (n.getType() == NodeType.Intersection) d += HeuristicSetting.AVERAGE_INTERSECTION_TIME;
 
             n.setHeuristic(d);
         }
 
         return true;
+    }
+
+    public double calculateHeuristic(Graph graph, Node selected, Node start, Node destination) {
+//        return UnitConverter.geopositionDistance(selected.getLatitude(), selected.getLongitude(), destination.getLatitude(), destination.getLongitude()) / UnitConverter.kmhToMs(AVERAGE_SPEED_LIMIT);
+        return 0;
     }
 }

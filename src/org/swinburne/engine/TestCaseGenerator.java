@@ -1,7 +1,6 @@
 package org.swinburne.engine;
 
 import javafx.concurrent.Task;
-import org.swinburne.engine.SearchSetting.AStarSearch;
 import org.swinburne.engine.SearchSetting.SearchSetting;
 import org.swinburne.model.Graph;
 import org.swinburne.model.Node;
@@ -93,25 +92,20 @@ public class TestCaseGenerator extends Task<Integer> {
 
                 graph.reset();
 
-                AStarSearch searchTime = new AStarSearch();
-                AStarSearch searchDistance = new AStarSearch();
-                searchTime.computeDirectionTime(graph, start, destination);
-                searchDistance.computeDirectionDistance(graph, start, destination);
-
                 for (SearchSetting se : SearchSetting.getSearchSettingList()) {
                     se.computeDirection(graph, start, destination);
-                    if (searchTime.isSolutionFound()) {
+                    if (se.isSolutionFound()) {
                         fileWriterMap.get(se).write(parseResult(iteration,
                                 start.getId(),
                                 destination.getId(),
-                                searchTime.getDistanceStartFinish(),
-                                searchTime.getTotalDistance(),
-                                searchTime.getTimeTaken(),
-                                searchTime.getTrafficSignalPassed(),
-                                searchTime.getPath().size(),
-                                searchTime.getVisitedCount(),
-                                searchTime.getFrontierCount(),
-                                searchTime.getProcessTimeMS()) + "\n");
+                                se.getDistanceStartFinish(),
+                                se.getTotalDistance(),
+                                se.getTimeTaken(),
+                                se.getTrafficSignalPassed(),
+                                se.getPath().size(),
+                                se.getVisitedCount(),
+                                se.getFrontierCount(),
+                                se.getProcessTimeMS()) + "\n");
                     } else {
                         fileWriterMap.get(se).write(parseEmpty(iteration, start.getId(), destination.getId()) + "\n");
                     }

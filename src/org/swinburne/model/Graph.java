@@ -51,8 +51,6 @@ public class Graph implements Serializable {
             n.setFValue(Double.MAX_VALUE);
             n.setGCost(Double.MAX_VALUE);
             n.setHeuristic(Double.MAX_VALUE);
-            n.getChildren().clear();
-            n.setParent(null);
             n.setTimeTravelled(0);
         }
     }
