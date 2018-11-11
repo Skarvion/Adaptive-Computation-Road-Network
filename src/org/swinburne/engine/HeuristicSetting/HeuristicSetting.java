@@ -38,5 +38,5 @@ public abstract class HeuristicSetting {
         return endTime;
     }
 
-    public long getDurationNS() { return endTime - startTime; }
+    public long getDurationmS() { return (endTime - startTime) / 10000000; }
 }

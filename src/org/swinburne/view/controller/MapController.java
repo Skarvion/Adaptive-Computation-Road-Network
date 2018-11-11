@@ -61,6 +61,9 @@ public class MapController implements Initializable {
     private Button reloadButton;
 
     @FXML
+    private RadioButton noneRadioButton;
+
+    @FXML
     private RadioButton startRadioButton;
 
     @FXML
@@ -153,10 +156,12 @@ public class MapController implements Initializable {
 
             startRadioButton.setToggleGroup(radioGroup);
             finishRadioButton.setToggleGroup(radioGroup);
+            noneRadioButton.setToggleGroup(radioGroup);
 
             radioGroup.selectedToggleProperty().addListener((observable, oldValue, newValue) -> {
                 if (newValue == startRadioButton) state = NodeSelectionState.Start;
-                else state = NodeSelectionState.Finish;
+                else if (newValue == finishRadioButton) state = NodeSelectionState.Finish;
+                else state = NodeSelectionState.None;
             });
 
             initialPaneWidth = drawPane.getPrefWidth();
@@ -191,7 +196,14 @@ public class MapController implements Initializable {
 
     @FXML
     void clearPin(ActionEvent event) {
+        drawPane.getChildren().removeAll(solutionObservableList);
+        solutionObservableList.clear();
 
+        selectedStartNode = null;
+        selectedFinishNode = null;
+
+        startPinView.setVisible(false);
+        finishPinView.setVisible(false);
     }
 
     @FXML
@@ -295,29 +307,52 @@ public class MapController implements Initializable {
     }
 
     @FXML
-    void zoomIn(ActionEvent event) {
-        zoomFactor += 1;
-
-        drawPane.setPrefWidth(initialPaneWidth * zoomFactor);
-        drawPane.setPrefHeight(initialPaneHeight * zoomFactor);
-
-
-        for (MapNode mn : graphNodeMap.values()) {
-            mn.zoomPos(zoomFactor);
-        }
-
-        redrawEdges();
-    }
-
-    @FXML
     void zoomOut(ActionEvent event) {
+        if (zoomFactor <= 1) return;
+
+        float oldZoomFactor = zoomFactor;
         zoomFactor -= 1;
 
         drawPane.setPrefWidth(initialPaneWidth * zoomFactor);
         drawPane.setPrefHeight(initialPaneHeight * zoomFactor);
 
         for (MapNode mn : graphNodeMap.values()) {
-            mn.zoomPos(zoomFactor);
+            mn.zoomPos(zoomFactor, oldZoomFactor);
+        }
+
+        if (selectedStartNode != null) displayPin(startPinView, selectedStartNode);
+        if (selectedFinishNode != null) displayPin(finishPinView, selectedFinishNode);
+
+        for (Line l : solutionObservableList) {
+            l.setStartX(l.getStartX() * (zoomFactor) / oldZoomFactor);
+            l.setStartY(l.getStartY() * (zoomFactor) / oldZoomFactor);
+            l.setEndX(l.getEndX() * (zoomFactor) / oldZoomFactor);
+            l.setEndY(l.getEndY() * (zoomFactor) / oldZoomFactor);
+        }
+
+        redrawEdges();
+    }
+
+    @FXML
+    void zoomIn(ActionEvent event) {
+        float oldZoomFactor = zoomFactor;
+        zoomFactor += 1;
+
+        drawPane.setPrefWidth(initialPaneWidth * zoomFactor);
+        drawPane.setPrefHeight(initialPaneHeight * zoomFactor);
+
+        for (MapNode mn : graphNodeMap.values()) {
+            mn.zoomPos(zoomFactor, oldZoomFactor);
+        }
+
+        if (selectedStartNode != null) displayPin(startPinView, selectedStartNode);
+        if (selectedFinishNode != null) displayPin(finishPinView, selectedFinishNode);
+
+        for (Line l : solutionObservableList) {
+            l.setStartX(l.getStartX() * (zoomFactor) / oldZoomFactor);
+            l.setStartY(l.getStartY() * (zoomFactor) / oldZoomFactor);
+            l.setEndX(l.getEndX() * (zoomFactor) / oldZoomFactor);
+            l.setEndY(l.getEndY() * (zoomFactor) / oldZoomFactor);
         }
 
         redrawEdges();
@@ -325,7 +360,7 @@ public class MapController implements Initializable {
 
     @FXML
     void generateTestCase(ActionEvent event) {
-        TestCaseGenerator generator = new TestCaseGenerator(graph, "Hawthorn", 1000);
+        TestCaseGenerator generator = new TestCaseGenerator(graph, "Hawthorn", 10000);
         generator.progressProperty().addListener((observable, oldValue, newValue) -> {
             statusLabel.setText("Test case: " + newValue);
         });
@@ -496,7 +531,7 @@ public class MapController implements Initializable {
 
 
     // Reference: https://stackoverflow.com/questions/40444966/javafx-making-an-object-with-a-shape-and-text
-    private class MapNode extends StackPane {
+    private class MapNode {
         private Circle circle;
         private Node node;
         private Line line;
@@ -512,33 +547,37 @@ public class MapController implements Initializable {
             circle.setRadius(RADIUS);
             circle.setFill(Color.YELLOW);
             circle.setStroke(Color.BLACK);
-            getChildren().add(circle);
+            drawPane.getChildren().add(circle);
             this.node = node;
 
             label = new Label(node.getLabel());
-            label.setLayoutX(0);
-            label.setLayoutY(0);
-            getChildren().add(label);
+            drawPane.getChildren().add(label);
 
             if (node.getType() == NodeType.Intersection) {
                 line = new Line();
-                line.setStartX(0);
-                line.setStartY(0);
-                line.setEndX(10);
-                line.setEndY(10);
 
                 line.setStroke(Color.RED);
                 line.setStrokeWidth(3);
-                getChildren().add(line);
+                drawPane.getChildren().add(line);
             }
 
-            circle.setLayoutX(label.getBoundsInLocal().getWidth() / 2);
-            circle.setLayoutY(0);
-            drawPane.getChildren().add(this);
+//            circle.setLayoutX(label.getBoundsInLocal().getWidth() / 2);
+//            circle.setLayoutY(0);
+//            drawPane.getChildren().add(this);
 
             Platform.runLater(() -> {
-                setLayoutX(x - (label.getWidth() / 2));
-                setLayoutY(y);
+                circle.setLayoutX(x - (RADIUS / 2));
+                circle.setLayoutY(y - (RADIUS / 2));
+
+                label.setLayoutX(getPosX() - (label.getWidth() / 2));
+                label.setLayoutY(getPosY() - (label.getHeight() / 2));
+
+                if (line != null) {
+                    line.setStartX(getPosX());
+                    line.setStartY(getPosY());
+                    line.setEndX(getPosX() + 10);
+                    line.setEndY(getPosY() + 10);
+                }
 
                 initialPosX = getPosX();
                 initialPosY = getPosY();
@@ -548,6 +587,12 @@ public class MapController implements Initializable {
         public void setText(String text) {
             label.setText(text);
             label.toFront();
+            label.setLayoutX(getPosX() - (label.getWidth() / 2));
+            label.setLayoutY(getPosY() - (label.getHeight() / 2));
+        }
+
+        public void clearText() {
+            label.setText("");
         }
 
         public void redraw() {
@@ -556,13 +601,12 @@ public class MapController implements Initializable {
 
         // This is because cannot override getLayoutX()
         public double getPosX() {
-            return getLayoutX() + (label.getWidth() / 2);
+            return circle.getLayoutX() + (RADIUS / 2);
         }
 
         public double getPosY() {
-            return getLayoutY() + (getHeight() / 2);
+            return circle.getLayoutY() + (RADIUS / 2);
         }
-
 
         public Node getNode() {
             return node;
@@ -577,12 +621,19 @@ public class MapController implements Initializable {
             return node.getLabel();
         }
 
-        public void zoomPos(float newZoomFactor) {
-//            setLayoutX(getLayoutX() * newZoomFactor);
-//            setLayoutY(getLayoutY() * newZoomFactor);
+        public void zoomPos(float newZoomFactor, float oldZoomFactor) {
+            circle.setLayoutX(circle.getLayoutX() * newZoomFactor / oldZoomFactor);
+            circle.setLayoutY(circle.getLayoutY() * newZoomFactor / oldZoomFactor);
 
-            setLayoutX((initialPosX * newZoomFactor) - (label.getWidth() / 2));
-            setLayoutY((initialPosY * newZoomFactor) - (getHeight() / 2));
+            if (line != null) {
+                line.setStartX(line.getStartX() * newZoomFactor / oldZoomFactor);
+                line.setStartY(line.getStartY() * newZoomFactor / oldZoomFactor);
+                line.setEndX(line.getStartX() + 10);
+                line.setEndY(line.getStartY() + 10);
+            }
+
+            label.setLayoutX(getPosX() - (label.getWidth() / 2));
+            label.setLayoutY(getPosY() - (label.getHeight() / 2));
         }
     }
 
@@ -666,27 +717,6 @@ public class MapController implements Initializable {
         }
     }
 
-    private class MapNodeListCell extends ListCell<SimpleObjectProperty<MapNode>> {
-        @Override
-        protected void updateItem(SimpleObjectProperty<MapNode> item, boolean empty) {
-            super.updateItem(item, empty);
-            if (empty) setText(null);
-            else setText(item.get().getNode().getLabel());
-        }
-    }
-
-    private class NodeToStringConverter extends javafx.util.StringConverter<SimpleObjectProperty<MapNode>> {
-        @Override
-        public String toString(SimpleObjectProperty<MapNode> object) {
-            return object.get().getNode().getLabel();
-        }
-
-        @Override
-        public SimpleObjectProperty<MapNode> fromString(String string) {
-            return null;
-        }
-    }
-
     public class SearchTask extends Task<Void> {
 
         private ArrayList<Node> resultPath;
@@ -699,15 +729,22 @@ public class MapController implements Initializable {
 
         @Override
         protected Void call() throws Exception {
+            Platform.runLater(() -> {
+                for (MapNode mn : graphNodeMap.values()) {
+                    mn.clearText();
+                }
+            });
+
             searchSetting.setMapController(this);
             searchSetting.computeDirection(graph, selectedStartNode.getNode(), selectedFinishNode.getNode());
 
-            resultPath.clear();
-            resultPath.addAll(searchSetting.getPath());
-            if (resultPath.size() == 0) {
-                System.out.println("Test is null?");
+            if (!searchSetting.isSolutionFound()) {
+                System.out.println("No solution found");
                 return null;
             }
+
+            resultPath.clear();
+            resultPath.addAll(searchSetting.getPath());
 
             ArrayList<MapNode> foundMapNode = new ArrayList<>();
 
@@ -724,7 +761,11 @@ public class MapController implements Initializable {
             for (Node n : resultPath) {
                 path += n.getId() + "\n|\nV\n";
             }
-            outputTextArea.setText(path);
+
+            String output = "Time: " + searchSetting.getTimeTaken() + "\n"
+                    + "Distance: " + searchSetting.getTotalDistance() + "\n"
+                    + path;
+            outputTextArea.setText(output);
 
             if (foundMapNode.size() <= 1) return null;
 
@@ -772,40 +813,11 @@ public class MapController implements Initializable {
                     drawPane.getChildren().add(line);
                     solutionObservableList.add(line);
 
-                    sourceMapNode.setText(Double.toString(source.getFValue()));
+//                    sourceMapNode.setText(Double.toString(source.getFValue()));
                 });
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-        }
-    }
-
-    public void drawFrontier(Node source, Node destination) {
-        try {
-            if (delayMS > 0) Thread.sleep(delayMS);
-            Platform.runLater(() -> {
-                MapNode sourceMapNode = graphNodeMap.get(source);
-                MapNode destinationMapNode = graphNodeMap.get(destination);
-
-                if (sourceMapNode == null || destinationMapNode == null) return;
-
-                Line line = new Line();
-
-                line.setStartX(sourceMapNode.getPosX());
-                line.setStartY(sourceMapNode.getPosY());
-
-                line.setEndX(destinationMapNode.getPosX());
-                line.setEndY(destinationMapNode.getPosY());
-
-                line.setStrokeWidth(4);
-                line.setStroke(Color.YELLOW);
-
-                drawPane.getChildren().add(line);
-                solutionObservableList.add(line);
-                line.toBack();
-            });
-        } catch (InterruptedException e) {
-            e.printStackTrace();
         }
     }
 

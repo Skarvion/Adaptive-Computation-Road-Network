@@ -81,6 +81,14 @@ public class BestTimeSearch extends SearchSetting {
                         newTreeNode.setTime(selectedTreeNode.getTime() + timeTraversed);
                         newTreeNode.setDistance(selectedTreeNode.getDistance() + distanceTravelled);
 
+                        double signal = 0;
+                        if (selectedTreeNode.getMetaData().get("traffic-signal") != null)
+                            signal = selectedTreeNode.getMetaData().get("traffic-signal");
+
+                        if (n.getType() == NodeType.Intersection) signal += 1;
+
+                        newTreeNode.getMetaData().put("traffic-signal", signal);
+
                         n.setGCost(totalGScore);
                         n.setFValue(n.getGCost() + heuristic.calculateHeuristic(graph, n, start, destination));
 
@@ -107,6 +115,9 @@ public class BestTimeSearch extends SearchSetting {
         TreeNode<Node> selectedTreeNode = destination;
         timeTaken = destination.getTime();
         totalDistance = destination.getDistance();
+        if (destination.getMetaData().get("traffic-signal") != null)
+            trafficSignalPassed = (int) (double) destination.getMetaData().get("traffic-signal");
+        else trafficSignalPassed = 0;
         while (selectedTreeNode != null) {
             result.add(selectedTreeNode.getObject());
             if (selectedTreeNode.getParent() != null) {

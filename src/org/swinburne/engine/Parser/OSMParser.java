@@ -98,6 +98,10 @@ public class OSMParser {
 
                     Way way = new Way();
                     way.setId(element.getAttribute("id"));
+
+                    if ((tagMap.get("oneway") != null && tagMap.get("oneway").equalsIgnoreCase("yes")) ||
+                            (tagMap.get("junction") != null && tagMap.get("junction").equalsIgnoreCase("roundabout"))) way.setOneway(true);
+
                     if (tagMap.get("name") != null) way.setLabel(tagMap.get("name"));
                     if (tagMap.get("maxspeed") != null) way.setSpeedLimitKmh(Float.parseFloat(tagMap.get("maxspeed")));
                     else way.setSpeedLimitKmh(50); // Default speed reference: https://en.wikipedia.org/wiki/Speed_limits_in_Australia

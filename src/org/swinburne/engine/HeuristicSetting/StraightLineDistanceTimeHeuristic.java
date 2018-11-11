@@ -39,7 +39,7 @@ public class StraightLineDistanceTimeHeuristic extends HeuristicSetting {
     }
 
     public double calculateHeuristic(Graph graph, Node selected, Node start, Node destination) {
-//        return UnitConverter.geopositionDistance(selected.getLatitude(), selected.getLongitude(), destination.getLatitude(), destination.getLongitude()) / UnitConverter.kmhToMs(AVERAGE_SPEED_LIMIT);
-        return 0;
+        return UnitConverter.geopositionDistance(selected.getLatitude(), selected.getLongitude(), destination.getLatitude(), destination.getLongitude()) / UnitConverter.kmhToMs(AVERAGE_SPEED_LIMIT);
+//        return 0;
     }
 }

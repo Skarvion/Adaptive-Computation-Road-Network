@@ -28,11 +28,6 @@ public class TreeNode<T> {
         this.object = object;
     }
 
-    public TreeNode(T object, TreeNode<T> parent) {
-        this.object = object;
-        this.parent = parent;
-    }
-
     public boolean isNodeExistInParent(TreeNode<T> node) {
         if (parent != null) {
             return parent.isNodeExistInParent(node);
@@ -74,9 +69,11 @@ public class TreeNode<T> {
         this.children = children;
     }
 
-    public void putMetaData(String name, double value) { metaData.put(name, value); }
+//    public void putMetaData(String name, double value) { metaData.put(name, value); }
+//
+//    public double getMetaData(String name) { return metaData.get(name); }
 
-    public double getMetaData(String name) { return metaData.get(name); }
+    public HashMap<String, Double> getMetaData() { return metaData; }
 
     public double getCost() {
         return cost;

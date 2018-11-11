@@ -16,7 +16,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<BorderPane xmlns="http://javafx.com/javafx/9.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.swinburne.view.controller.MapController">
+<BorderPane xmlns="http://javafx.com/javafx/10.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="org.swinburne.view.controller.MapController">
    <center>
       <HBox>
          <children>
@@ -50,6 +50,7 @@
                      <children>
                         <VBox prefWidth="100.0" spacing="10.0">
                            <children>
+                              <RadioButton fx:id="noneRadioButton" layoutX="10.0" layoutY="10.0" mnemonicParsing="false" text="None" />
                               <RadioButton fx:id="startRadioButton" mnemonicParsing="false" text="Start" />
                               <RadioButton fx:id="finishRadioButton" mnemonicParsing="false" text="Finish" />
                            </children>
