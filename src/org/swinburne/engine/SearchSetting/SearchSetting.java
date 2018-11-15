@@ -17,8 +17,6 @@ public abstract class SearchSetting {
     static {
         searchSettingList.add(new BestTimeSearch());
         searchSettingList.add(new BestDistanceSearch());
-//        searchSettingList.add(new BestTimeSLDSearch());
-//        searchSettingList.add(new BestDistanceSLDSearch());
     }
 
     protected ArrayList<String> ids = new ArrayList<>();

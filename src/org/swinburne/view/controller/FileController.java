@@ -69,6 +69,8 @@ public class FileController implements Initializable {
                 rightLonText.setDisable(true);
             }
         });
+
+        unboundedRadio.setSelected(true);
     }
 
     private void closeDialog() { ((Stage) cancelButton.getScene().getWindow()).close(); }
@@ -111,13 +113,11 @@ public class FileController implements Initializable {
                     result.put("rightLon", rightLon);
                     result.put("file", selectedFile);
 
-
                 } catch (NumberFormatException pe) {
                     Alert alert = new Alert(Alert.AlertType.ERROR, "Number format is incorrect!");
                     alert.showAndWait();
                     return;
                 }
-
             }
         }
 

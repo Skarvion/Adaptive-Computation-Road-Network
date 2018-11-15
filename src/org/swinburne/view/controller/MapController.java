@@ -257,7 +257,7 @@ public class MapController implements Initializable {
             FileController fileController = loader.getController();
 
             fileController.setMapController(this);
-            Scene scene = new Scene(root, 300, 400);
+            Scene scene = new Scene(root);
             Stage stage = new Stage();
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.initOwner(openMapFileButton.getScene().getWindow());
@@ -359,8 +359,33 @@ public class MapController implements Initializable {
     }
 
     @FXML
-    void generateTestCase(ActionEvent event) {
-        TestCaseGenerator generator = new TestCaseGenerator(graph, "Hawthorn", 10000);
+    void testCasePrompt(ActionEvent event) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getClassLoader().getResource("fxml/testCaseGenerator.fxml"));
+
+            Parent root = loader.load();
+            TestCaseGeneratorController testCaseGeneratorController = loader.getController();
+
+            testCaseGeneratorController .setMapController(this);
+            Scene scene = new Scene(root);
+            Stage stage = new Stage();
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.initOwner(generateTestCaseButton.getScene().getWindow());
+            stage.setScene(scene);
+            stage.show();
+
+        } catch (IOException ioe) {
+            ioe.printStackTrace();
+        }
+    }
+
+    public void generateTestCase(File outputDirectory, String prefix, int testCase) {
+        if (graph == null) {
+            new Alert(Alert.AlertType.ERROR, "OSM graph is empty. Please select an OSM file first.").showAndWait();
+            return;
+        }
+
+        TestCaseGenerator generator = new TestCaseGenerator(graph, outputDirectory.getAbsolutePath() + prefix, testCase);
         generator.progressProperty().addListener((observable, oldValue, newValue) -> {
             statusLabel.setText("Test case: " + newValue);
         });
@@ -369,6 +394,8 @@ public class MapController implements Initializable {
         }));
 
         generator.generateTestCase();
+
+        new Alert(Alert.AlertType.INFORMATION, "Test case generation completed.").show();
 //        new Thread(generator).startNode();
     }
 

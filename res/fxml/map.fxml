@@ -59,7 +59,7 @@
                            <children>
                               <Button fx:id="clearPinsButton" mnemonicParsing="false" onAction="#clearPin" text="Clear Pins" />
                               <Button fx:id="calculateButton" mnemonicParsing="false" onAction="#calculateAction" text="Search Path" />
-                              <Button fx:id="generateTestCaseButton" mnemonicParsing="false" onAction="#generateTestCase" text="Generate Test Case" />
+                              <Button fx:id="generateTestCaseButton" mnemonicParsing="false" onAction="#testCasePrompt" text="Generate Test Case" />
                            </children>
                         </VBox>
                      </children>
