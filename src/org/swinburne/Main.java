@@ -10,8 +10,16 @@ import org.swinburne.model.Graph;
 
 import java.io.File;
 
+/**
+ * The main entry point of the program.
+ */
 public class Main extends Application {
 
+    /**
+     * Start JavaFX GUI.
+     * @param primaryStage
+     * @throws Exception
+     */
     @Override
     public void start(Stage primaryStage) throws Exception{
         Parent root = FXMLLoader.load(getClass().getClassLoader().getResource("fxml/map.fxml"));
@@ -20,6 +28,10 @@ public class Main extends Application {
         primaryStage.show();
     }
 
+    /**
+     * Main entry point of the program.
+     * @param args args.
+     */
     public static void main(String[] args) {
 
         launch(args);

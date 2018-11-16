@@ -1,12 +1,12 @@
 package org.swinburne.view.controller;
 
 import javafx.application.Platform;
-import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.ObservableMap;
 import javafx.concurrent.Task;
+import javafx.embed.swing.SwingFXUtils;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -19,7 +19,6 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
-import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
@@ -35,14 +34,20 @@ import org.swinburne.model.Node;
 import org.swinburne.model.NodeType;
 import org.swinburne.model.Way;
 
+import javax.imageio.ImageIO;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Map;
+import java.util.ResourceBundle;
 
+/**
+ * The main GUI component of the framework. Here lies the map representation from the OSM file along with all other additional controls. Other more detailed operations would need to prompt the user for specific information such as calling the {@link TestCaseGeneratorController} to prompt test case generation and {@link FileController} to open specific OSM file. User can search for navigation path based on seleected {@link SearchSetting} and check the details of nodes in the graph map.
+ */
 public class MapController implements Initializable {
 
     @FXML
@@ -125,6 +130,7 @@ public class MapController implements Initializable {
     private double initialPaneHeight;
 
     private File mapFile;
+    private File trafficCSVFile;
     private Double topLat;
     private Double leftLon;
     private Double botLat;
@@ -132,11 +138,16 @@ public class MapController implements Initializable {
 
     private long delayMS;
 
+    /**
+     * Initialize the components.
+     * @param location
+     * @param resources
+     */
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         try {
-            startPin = new Image(new FileInputStream("start-pin.png"));
-            finishPin = new Image(new FileInputStream("finish-pin.png"));
+            startPin = SwingFXUtils.toFXImage(ImageIO.read(getClass().getClassLoader().getResource("img/start-pin.png")), null);
+            finishPin = SwingFXUtils.toFXImage(ImageIO.read(getClass().getClassLoader().getResource("img/finish-pin.png")), null);
             startPinView = new ImageView(startPin);
             finishPinView = new ImageView(finishPin);
 
@@ -191,9 +202,15 @@ public class MapController implements Initializable {
 
         } catch (FileNotFoundException e) {
             e.printStackTrace();
+        } catch (IOException ioe) {
+            ioe.printStackTrace();
         }
     }
 
+    /**
+     * Event handler for clear pin button to deselect and clear all the pins and navigation line rendered on the map.
+     * @param event
+     */
     @FXML
     void clearPin(ActionEvent event) {
         drawPane.getChildren().removeAll(solutionObservableList);
@@ -206,6 +223,10 @@ public class MapController implements Initializable {
         finishPinView.setVisible(false);
     }
 
+    /**
+     * Event handler for search node by ID button to find a node on the graph map based on its OSM ID or its unique ID if it doesn't have an OSM one. Depending on the selected node selection mode, it may or may not add pin on the selected node.
+     * @param event
+     */
     @FXML
     void searchNode(ActionEvent event) {
         Node searchedNode = graph.getNode(nodeSearchText.getText());
@@ -238,18 +259,23 @@ public class MapController implements Initializable {
         }
     }
 
+    /**
+     * Load the specified OSM file based on information stored on a {@link Map} object. The map contains of the directory the OSM file and the boundary of parsing if any along with the traffic signal.
+     * @param map information of OSM map file and the map boundary.
+     */
     public void loadOSMFile(Map<String, Object> map) {
         topLat = (Double) map.get("topLat");
         leftLon = (Double) map.get("leftLon");
         botLat = (Double) map.get("botLat");
         rightLon = (Double) map.get("rightLon");
         mapFile = (File) map.get("file");
+        trafficCSVFile = (File) map.get("csvFile");
 
         reload(null);
     }
 
     @FXML
-    void openMap(ActionEvent event) {
+    private void openMap(ActionEvent event) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getClassLoader().getResource("fxml/openMap.fxml"));
 
@@ -272,9 +298,8 @@ public class MapController implements Initializable {
     @FXML
     private void reload(ActionEvent event) {
         if (mapFile != null) {
-            //@TODO: chagne here later
-            graph = OSMParser.parseFromOSM(mapFile, -37.811323, 145.022338, -37.825929, 145.046812);
-            graph = TrafficSignalCSVParser.setTrafficIntersection(graph, "Traffic-Signal.csv");
+            graph = OSMParser.parseFromOSM(mapFile, topLat, leftLon, botLat, rightLon);
+            if (trafficCSVFile != null) graph = TrafficSignalCSVParser.setTrafficIntersection(graph, trafficCSVFile);
             drawGraph();
         }
         else {
@@ -285,7 +310,7 @@ public class MapController implements Initializable {
     }
 
     @FXML
-    void mapClick(MouseEvent event) {
+    private void mapClick(MouseEvent event) {
         closestNodeClick(event);
     }
 
@@ -358,8 +383,12 @@ public class MapController implements Initializable {
         redrawEdges();
     }
 
+    /**
+     * Open the test case generator prompt with the {@link TestCaseGeneratorController} class. Set the controller reference to this one.
+     * @param event
+     */
     @FXML
-    void testCasePrompt(ActionEvent event) {
+    private void testCasePrompt(ActionEvent event) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getClassLoader().getResource("fxml/testCaseGenerator.fxml"));
 
@@ -379,13 +408,19 @@ public class MapController implements Initializable {
         }
     }
 
+    /**
+     * Generate test case to CSV by calling the {@link TestCaseGenerator}. Will validate whether the graph is not null first. An alert will show when error occurs or test case generation is complete.
+     * @param outputDirectory directory where all test cases will be saved
+     * @param prefix prefix for test case CSV name, will be followed by the test case generation name
+     * @param testCase number of test case
+     */
     public void generateTestCase(File outputDirectory, String prefix, int testCase) {
         if (graph == null) {
             new Alert(Alert.AlertType.ERROR, "OSM graph is empty. Please select an OSM file first.").showAndWait();
             return;
         }
 
-        TestCaseGenerator generator = new TestCaseGenerator(graph, outputDirectory.getAbsolutePath() + prefix, testCase);
+        TestCaseGenerator generator = new TestCaseGenerator(graph, outputDirectory.getAbsolutePath() + "/" + prefix, testCase);
         generator.progressProperty().addListener((observable, oldValue, newValue) -> {
             statusLabel.setText("Test case: " + newValue);
         });
@@ -396,9 +431,11 @@ public class MapController implements Initializable {
         generator.generateTestCase();
 
         new Alert(Alert.AlertType.INFORMATION, "Test case generation completed.").show();
-//        new Thread(generator).startNode();
     }
 
+    /**
+     * Redrawing the lines between the {@link MapNode}.
+     */
     private void redrawEdges() {
         for (MapEdge me : graphEdgeObservableList) {
             me.clearLines();
@@ -411,6 +448,10 @@ public class MapController implements Initializable {
         }
     }
 
+    /**
+     * Populate the properties table content for a selected node with its details.
+     * @param node selected node
+     */
     private void populateProperty(Node node) {
         propertyEntries.clear();
 
@@ -425,6 +466,9 @@ public class MapController implements Initializable {
         propertyEntries.add(new PropertyEntry("Heuristic", node.getHeuristic() == Double.MAX_VALUE ? "UNDEFINED" : Double.toString(node.getHeuristic())));
     }
 
+    /**
+     * Draw the entirety of the graph based on the defined graph of this controller.
+     */
     private void drawGraph() {
         selectedStartNode = null;
         selectedFinishNode = null;
@@ -494,6 +538,11 @@ public class MapController implements Initializable {
         System.out.println("Rendering complete...\nEnd: " + sdf.format(new Date()));
     }
 
+    /**
+     * This function is used to return a {@link MapNode} of the map that is closest to the mouse cursor when clicked.
+     * @param event
+     * @return closest {@link MapNode} from mouse cursor on click event.
+     */
     private MapNode closestNodeClick(MouseEvent event) {
         MapNode closestNode = null;
 
@@ -531,12 +580,15 @@ public class MapController implements Initializable {
                     displayPin(finishPinView, closestNode);
                     break;
             }
-
-//            System.out.println("Closest node is " + closestNode.getNode().getId() + "\nX: " + closestNode.getPosX() + "\nY: " + closestNode.getPosY());
         }
         return closestNode;
     }
 
+    /**
+     * Display the selected image pin on to the map node on the map.
+     * @param view {@link ImageView} of the pin (only for starting and finish node).
+     * @param node selected node where the pin would be attached.
+     */
     private void displayPin(ImageView view, MapNode node) {
         if (node == null) {
             view.setVisible(false);
@@ -548,16 +600,30 @@ public class MapController implements Initializable {
         view.toFront();
     }
 
+    /**
+     * Return the graph in this controller.
+     * @return loaded graph
+     */
     public Graph getGraph() {
         return graph;
     }
 
+    /**
+     * Set the graph in this controller.
+     * @param graph loaded graph
+     */
     public void setGraph(Graph graph) {
         this.graph = graph;
     }
 
 
-    // Reference: https://stackoverflow.com/questions/40444966/javafx-making-an-object-with-a-shape-and-text
+    /**
+     * A representation of the {@link Node} in the {@link Graph} for the visualizer. It is rendered as a yellow circle that holds reference to said {@link Node}. It keeps track of its position relative to the GUI map. It also has an empty label which can be used to label the circle.
+     * <p>
+     * Reference: https://stackoverflow.com/questions/40444966/javafx-making-an-object-with-a-shape-and-text
+     * </p>
+     */
+    //
     private class MapNode {
         private Circle circle;
         private Node node;
@@ -569,6 +635,12 @@ public class MapController implements Initializable {
 
         private final double RADIUS = 2;
 
+        /**
+         * Constructor that sets the location of this component within the map and the referenced {@link Node}.
+         * @param node referenced {@link Node}
+         * @param x calculated X coordinate of this component within the map
+         * @param y calculated Y coordinate of this component within the map
+         */
         public MapNode(Node node, double x, double y) {
             circle = new Circle();
             circle.setRadius(RADIUS);
@@ -587,10 +659,6 @@ public class MapController implements Initializable {
                 line.setStrokeWidth(3);
                 drawPane.getChildren().add(line);
             }
-
-//            circle.setLayoutX(label.getBoundsInLocal().getWidth() / 2);
-//            circle.setLayoutY(0);
-//            drawPane.getChildren().add(this);
 
             Platform.runLater(() -> {
                 circle.setLayoutX(x - (RADIUS / 2));
@@ -611,6 +679,10 @@ public class MapController implements Initializable {
             });
         }
 
+        /**
+         * Set text of the label. Useful for identification purpose.
+         * @param text new label text
+         */
         public void setText(String text) {
             label.setText(text);
             label.toFront();
@@ -618,36 +690,66 @@ public class MapController implements Initializable {
             label.setLayoutY(getPosY() - (label.getHeight() / 2));
         }
 
+        /**
+         * Clear this label text.
+         */
         public void clearText() {
             label.setText("");
         }
 
-        public void redraw() {
+        /**
+         * Reload this component's label to show the {@link Node}'s label.
+         */
+        public void textToNodeLabel() {
             label.setText(node.getLabel());
         }
 
-        // This is because cannot override getLayoutX()
+        /**
+         * Get the X center point of the circle.
+         * @return X center coordinate of the component
+         */
         public double getPosX() {
             return circle.getLayoutX() + (RADIUS / 2);
         }
 
+        /**
+         * Get the Y center point of the circle.
+         * @return Y center coordinate of the component
+         */
         public double getPosY() {
             return circle.getLayoutY() + (RADIUS / 2);
         }
 
+        /**
+         * Get the referenced node.
+         * @return refernced {@link Node}
+         */
         public Node getNode() {
             return node;
         }
 
+        /**
+         * Set the referenced node.
+         * @param node referenced {@link Node}
+         */
         public void setNode(Node node) {
             this.node = node;
         }
 
+        /**
+         * Get the referenced {@link Node} label.
+         * @return {@link Node} label
+         */
         @Override
         public String toString() {
             return node.getLabel();
         }
 
+        /**
+         * Relocate the component on the map based on the new zoom factor and the previous one.
+         * @param newZoomFactor new zoom level
+         * @param oldZoomFactor previous zoom level
+         */
         public void zoomPos(float newZoomFactor, float oldZoomFactor) {
             circle.setLayoutX(circle.getLayoutX() * newZoomFactor / oldZoomFactor);
             circle.setLayoutY(circle.getLayoutY() * newZoomFactor / oldZoomFactor);
@@ -664,7 +766,9 @@ public class MapController implements Initializable {
         }
     }
 
-
+    /**
+     * A representation of the {@link Way} within {@link Graph} for the map. It contains a collection of lines and the reference to specific {@link Way}. The position of said lines are related to the connected {@link MapNode} position.
+     */
     private class MapEdge {
         private Way way;
 
@@ -673,6 +777,10 @@ public class MapController implements Initializable {
 
         private final double STROKE_WIDTH = 2;
 
+        /**
+         * Constructor that creates an array of line based on referenced {@link Way}, and connect each one of them to the specified {@link MapNode} position.
+         * @param way
+         */
         public MapEdge(Way way) {
             this.way = way;
             boolean labeled = (way.getLabel() != null);
@@ -686,12 +794,6 @@ public class MapController implements Initializable {
             double longest = 0;
             double streetStartX = 0, streetStartY = 0, streetEndX = 0, streetEndY = 0;
             for (int i = 1; i < way.getNodeOrderedList().size(); i++) {
-//                try {
-//                    MapNode startNode = getMapNode(way.getNodeOrderedList().get(i));
-//                } catch (IndexOutOfBoundsException ioobe) {
-//                    break;
-//                }
-
                 Line line = new Line();
                 line.setStartX(getMapNode(way.getNodeOrderedList().get(i - 1)).getPosX());
                 line.setStartY(getMapNode(way.getNodeOrderedList().get(i - 1)).getPosY());
@@ -729,31 +831,51 @@ public class MapController implements Initializable {
             }
         }
 
+        /**
+         * Clear the lines of this component and de-reference the {@link Way}. Used for cleanup purpose.
+         */
         private void clearLines() {
             for (Line l : lineArrayList) {
                 drawPane.getChildren().remove(l);
             }
             if (wayName != null) drawPane.getChildren().remove(wayName);
-//            drawPane.getChildren().remove(lineArrayList);
             lineArrayList.clear();
             wayName = null;
         }
 
+        /**
+         * Find the linking {@link MapNode} based on the connected {@link Node}.
+         * @param node finding {@link MapNode} based on it
+         * @return {@link MapNode} with the referenced node within the map
+         */
         private MapNode getMapNode(Node node) {
             return graphNodeMap.get(node);
         }
     }
 
+    /**
+     * Search task performs search function within the graph asynchronously. It implements {@link Task} of JavaFX to work in tandem with the rest of the GUI.
+     */
     public class SearchTask extends Task<Void> {
 
         private ArrayList<Node> resultPath;
         private SearchSetting searchSetting;
 
+        /**
+         * Constructor that sets up the connecting resultant array result and the selected {@link SearchSetting}.
+         * @param resultPath linked {@link ArrayList} of the result
+         * @param searchSetting {@link SearchSetting} used to perform the search operation
+         */
         private SearchTask(ArrayList<Node> resultPath, SearchSetting searchSetting) {
             this.resultPath = resultPath;
             this.searchSetting = searchSetting;
         }
 
+        /**
+         * Initiate search operation on the graph based on the controller start and finish {@link Node} and the selected {@link SearchSetting}. This function will also draw frontier as it expands its search space and finally draw the solution path in green if it found any. Acts as the starting point of the asynchronous operation if run on separate thread.
+         * @return
+         * @throws Exception
+         */
         @Override
         protected Void call() throws Exception {
             Platform.runLater(() -> {
@@ -817,6 +939,11 @@ public class MapController implements Initializable {
             return null;
         }
 
+        /**
+         * Draw the frontier line on the map based on 2 {@link Node} points on the map, assuming that they exist within the map. It is drawn with yellow colour.
+         * @param source starting node line
+         * @param destination ending node line
+         */
         public void drawFrontier(Node source, Node destination) {
             try {
                 if (delayMS > 0) Thread.sleep(delayMS);
@@ -839,8 +966,6 @@ public class MapController implements Initializable {
 
                     drawPane.getChildren().add(line);
                     solutionObservableList.add(line);
-
-//                    sourceMapNode.setText(Double.toString(source.getFValue()));
                 });
             } catch (InterruptedException e) {
                 e.printStackTrace();
@@ -848,35 +973,67 @@ public class MapController implements Initializable {
         }
     }
 
+    /**
+     * Container class to keep display information on the property table on the GUI and easily implementable. It contains the key {@link SimpleStringProperty} along with the accompanying value {@link SimpleStringProperty}.
+     */
     public class PropertyEntry {
         private SimpleStringProperty key;
         private SimpleStringProperty value;
 
+        /**
+         * Constructor contains the key and value using {@link SimpleStringProperty}.
+         * @param key {@link String} key
+         * @param value {@link String} value
+         */
         public PropertyEntry(String key, String value) {
             this.key = new SimpleStringProperty(key);
             this.value = new SimpleStringProperty(value);
         }
 
+        /**
+         * Get the {@link String} of the key.
+         * @return key in {@link String}
+         */
         public String getKey() {
             return key.getValue();
         }
 
+        /**
+         * Set the key {@link String}.
+         * @param key new {@link String} key.
+         */
         public void setKey(String key) {
             this.key.set(key);
         }
 
+        /**
+         * Get the {@link String} of the value.
+         * @return value in {@link String}
+         */
         public String getValue() {
             return value.getValue();
         }
 
+        /**
+         * Set the key {@link String}.
+         * @param value new {@link String} value.
+         */
         public void setValue(String value) {
             this.value.set(value);
         }
 
+        /**
+         * Get the {@link SimpleStringProperty} of the key.
+         * @return key {@link SimpleStringProperty}
+         */
         public SimpleStringProperty keyProperty() {
             return key;
         }
 
+        /**
+         * Get the {@link SimpleStringProperty} of the value.
+         * @return value {@link SimpleStringProperty}
+         */
         public SimpleStringProperty valueProperty() {
             return value;
         }

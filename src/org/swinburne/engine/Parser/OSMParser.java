@@ -13,16 +13,42 @@ import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
+/**
+ * Class used to parse OSM file to a {@link Graph}, with a set boundary if stated.
+ */
 public class OSMParser {
+    /**
+     * Parse OSM file without any boundary limitation.
+     * @param file OSM file
+     * @return generated graph
+     */
     public static Graph parseFromOSM(File file) {
         return parse(file, null, null, null, null);
     }
 
+
+    /**
+     * Parse OSM file without any boundary limitation.
+     * @param file OSM file
+     * @param top top latitude boundary
+     * @param left left longitude boundary
+     * @param bottom bottom latitude boundary
+     * @param right right longitude boundary
+     * @return generated graph
+     */
     public static Graph parseFromOSM(File file, Double top, Double left, Double bottom, Double right) {
         return parse(file, top, left, bottom, right);
     }
 
-    // Reference: https://www.tutorialspoint.com/java_xml/java_dom_parse_document.htm
+    /**
+     * Main function used to parse the OSM file to graph. Will parse each individual {@link Node} first, before connecting them to {@link Way}. Depending on the metadata within the file, they may be ignored and deleted if they are not vehicle road. Finally sanitize any orphaned node.
+     * @param file OSM file
+     * @param top top latitude boundary
+     * @param left left longitude boundary
+     * @param bottom bottom latitude boundary
+     * @param right right longitude boundary
+     * @return generated graph
+     */
     private static Graph parse(File file, Double top, Double left, Double bottom, Double right) {
         Graph graph = new Graph();
 
@@ -63,7 +89,6 @@ public class OSMParser {
 
                     Node newNode = new Node();
                     newNode.setId(element.getAttribute("id"));
-//                    newNode.setLabel(newNode.getId());
                     if (tagMap.get("name") != null) newNode.setLabel(tagMap.get("name"));
                     newNode.setLatitude(lat);
                     newNode.setLongitude(lon);
@@ -136,6 +161,10 @@ public class OSMParser {
         return graph;
     }
 
+    /**
+     * Sanitize the graph from any orphaned node.
+     * @param graph given graph
+     */
     private static void sanitizeNode(Graph graph) {
         Set<Node> visited = new HashSet<>();
 
@@ -192,6 +221,12 @@ public class OSMParser {
         }
     }
 
+
+    /**
+     * Get the tag list from the XML file and convert it to {@link Map}.
+     * @param element XML node element
+     * @return converted map
+     */
     private static Map<String, String> getTagList(Element element) {
         Map<String, String> tagMap = new HashMap<>();
         NodeList tagList = element.getElementsByTagName("tag");

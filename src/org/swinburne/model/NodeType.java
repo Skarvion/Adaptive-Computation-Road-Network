@@ -1,5 +1,8 @@
 package org.swinburne.model;
 
+/**
+ * Set the type op node.
+ */
 public enum NodeType {
     Road,
     TrainStation,

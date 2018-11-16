@@ -13,6 +13,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Random;
 
+/**
+ * Generates test cases for the map and store the data to a specified CSV file. Implements JavaFX {@link Task} and hence can be run on separate thread if needed. Acts as individual objects with different settings per new object of the generator.
+ */
 public class TestCaseGenerator extends Task<Integer> {
     private Graph graph;
     private ArrayList<Node> nodeList;
@@ -28,6 +31,12 @@ public class TestCaseGenerator extends Task<Integer> {
 
     private boolean simulateTraffic;
 
+    /**
+     * Cosntructor class that sets the graph, filename, and test cases.
+     * @param graph connected test graph
+     * @param filename prefix file name
+     * @param testCase number of test cases
+     */
     public TestCaseGenerator(Graph graph, String filename, int testCase) {
         this.graph = graph;
         this.filename = filename;
@@ -36,15 +45,13 @@ public class TestCaseGenerator extends Task<Integer> {
         this.simulateTraffic = false;
     }
 
-    public TestCaseGenerator(Graph graph, String filename, int testCase, MapController mapController) {
-        this.graph = graph;
-        this.filename = filename;
-        this.testCase = testCase;
-        this.startID = 0;
-        this.simulateTraffic = false;
-        this.mapController = mapController;
-    }
-
+    /**
+     * Cosntructor class that sets the graph, filename, and test cases. Also sets the initial ID stated in the test case file later.
+     * @param graph connected test graph
+     * @param filename prefix file name
+     * @param testCase number of test cases
+     * @param startID starting ID in CSV file
+     */
     public TestCaseGenerator(Graph graph, String filename, int testCase, int startID) {
         this.graph = graph;
         this.filename = filename;
@@ -53,6 +60,9 @@ public class TestCaseGenerator extends Task<Integer> {
         this.simulateTraffic = false;
     }
 
+    /**
+     * Synchronous call to start generating test cases with given settings.
+     */
     public void generateTestCase() {
         try {
             call();
@@ -61,8 +71,14 @@ public class TestCaseGenerator extends Task<Integer> {
         }
     }
 
+    /**
+     * Asynchronous handler when running on a separate thread to start the test case generation. Test case data set is stored in separate CSV file for each {@link SearchSetting} listed in its static list with the same prefix name. The test case is done as many times as specified. <p>
+     *     Each entry contains the properties of a given search result such as the total distance travelled, travell time, starting and finish {@link Node} ID, solution path node count, frontier node count, visited node count and execution time.
+     * </p>
+     * @return current test case number
+     */
     @Override
-    protected Integer call() throws Exception {
+    protected Integer call() {
         int iteration = startID;
         startTime = System.nanoTime();
 
@@ -110,18 +126,11 @@ public class TestCaseGenerator extends Task<Integer> {
                         fileWriterMap.get(se).write(parseEmpty(iteration, start.getId(), destination.getId()) + "\n");
                     }
                 }
-//                updateMessage("Test case " + iteration + "\n" + search.toString());
-//                updateProgress(iteration, startID + testCase);
             }
 
             for (FileWriter fw : fileWriterMap.values()) fw.close();
 
             System.out.println("Test case generation done");
-
-//            Platform.runLater(() -> {
-//                Alert completedAlert = new Alert(Alert.AlertType.INFORMATION, "Test case generation completed...");
-//                completedAlert.show();
-//            });
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -135,6 +144,13 @@ public class TestCaseGenerator extends Task<Integer> {
         return iteration;
     }
 
+    /**
+     * Write empty content to the CSV file row.
+     * @param iteration iteration ID
+     * @param startID starting node ID
+     * @param destinationID finish node ID
+     * @return compiled string
+     */
     private String parseEmpty(int iteration, String startID, String destinationID) {
         StringBuilder sb = new StringBuilder();
         sb.append(quoteMarks(Integer.toString(iteration)));
@@ -152,6 +168,21 @@ public class TestCaseGenerator extends Task<Integer> {
         return sb.toString();
     }
 
+    /**
+     * Write data string based on the test case result.
+     * @param iteration iteration ID
+     * @param startID starting node ID
+     * @param destinationID finish node ID
+     * @param sldDistance straight line distance from start to finish node in meter
+     * @param totalDistance total distance travelled in meter
+     * @param timeTaken total tiime take in second
+     * @param trafficSignalpassed traffic signal passed
+     * @param size size of solution path
+     * @param visitedCount visited node count
+     * @param frontierCount frontier ndoe count
+     * @param processTimeMS processing time in millisecond
+     * @return compiled string
+     */
     private String parseResult(int iteration, String startID, String destinationID, double sldDistance, double totalDistance, double timeTaken, int trafficSignalpassed, int size, int visitedCount, int frontierCount, long processTimeMS) {
         StringBuilder sb = new StringBuilder();
         sb.append(quoteMarks(Integer.toString(iteration)));
@@ -179,5 +210,9 @@ public class TestCaseGenerator extends Task<Integer> {
         return "\"" + content + "\",";
     }
 
+    /**
+     * Get the processing time of the test case geenration.
+     * @return time in millisecond
+     */
     public long processTimeMS() { return processTimeMS; }
 }

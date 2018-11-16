@@ -7,11 +7,18 @@ import org.swinburne.util.UnitConverter;
 
 import java.io.*;
 
-// Reference: https://www.mkyong.com/java/how-to-read-and-parse-csv-file-in-java/
+/**
+ * Read a traffic signal CSV file based on the VicRoad data set format.
+ */
 public class TrafficSignalCSVParser {
 
-    //@TODO: this whole thing might slow things down
-    public static Graph setTrafficIntersection(Graph graph, String csvFileName) {
+    /**
+     * Modify a given graph with the new traffic signal intersection CSV file and add new traffic intersection signal points.
+     * @param graph graph
+     * @param csvFile file with the CSV data set of traffic signal
+     * @return modified graph with traffic signal
+     */
+    public static Graph setTrafficIntersection(Graph graph, File csvFile) {
         BufferedReader br = null;
         String line = "";
         String csvSplitBy = ",";
@@ -19,7 +26,7 @@ public class TrafficSignalCSVParser {
         int count = 0;
 
         try {
-            br = new BufferedReader(new FileReader(csvFileName));
+            br = new BufferedReader(new FileReader(csvFile));
 
             boolean headingPassed = false;
             while ((line = br.readLine()) != null) {
@@ -69,6 +76,13 @@ public class TrafficSignalCSVParser {
         return graph;
     }
 
+    /**
+     * Get the closest node from the coordinate specified in the CSV file within a specified threshold.
+     * @param graph graph
+     * @param lat latitude
+     * @param lon longitude
+     * @return closet node within graph in form the coordinate
+     */
     private static Node getClosestNode(Graph graph, double lat, double lon) {
         Node closestNode = null;
         // The closest distance that is written here is the maximum threshold distance in meters

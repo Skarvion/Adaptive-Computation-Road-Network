@@ -13,13 +13,25 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.PriorityQueue;
 
+/**
+ * An implmeneted {@link SearchSetting} that aims to find the navigation route with the best/quickest time.
+ */
 public class BestTimeSearch extends SearchSetting {
 
+    /**
+     * Default contructor setting the value based on the {@link SearchSetting} constructor. Sets the {@link org.swinburne.engine.HeuristicSetting.HeuristicSetting} used as well.
+     */
     public BestTimeSearch() {
         super("Best Time Search", new String[]{"besttime", "time", "speed"});
         heuristic = new StraightLineDistanceTimeHeuristic();
     }
 
+    /**
+     * Override the computeDirection function to fnd navigation route with the best time.
+     * @param graph graph
+     * @param start start node
+     * @param destination destination node
+     */
     @Override
     public void computeDirection(Graph graph, Node start, Node destination) {
         resetSearch();
@@ -106,6 +118,11 @@ public class BestTimeSearch extends SearchSetting {
         }
     }
 
+    /**
+     * Derive solution path and clean-up operation.
+     * @param destination final destination {@link TreeNode}
+     * @return array of node in the solution path with the best time
+     */
     @Override
     protected ArrayList<Node> deriveSolution(TreeNode<Node> destination) {
         long endTime = System.nanoTime();
